@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "26498094672",
+    "project_id": "sigapposyandu-8fc5c",
+    "storage_bucket": "sigapposyandu-8fc5c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26498094672:android:248c26dc5228a0e0402355",
+        "android_client_info": {
+          "package_name": "com.example.frontend_posyandu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9NDOtS5y6gunRnbItO6yVNs_Yedq0L2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
