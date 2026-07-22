@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.example.frontend_posyandu"
-    compileSdk = 34
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

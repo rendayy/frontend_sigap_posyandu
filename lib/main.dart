@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'config.dart';
 import 'firebase_options.dart';
 import 'services/fcm_service.dart';
-import 'pages/home_page.dart';
-import 'pages/login_test_page.dart';
+import 'features/themes/theme.dart';
+import 'features/pages/splash_page.dart';
+import 'features/pages/auth/login_page.dart';
+import 'features/pages/dashboard/dashboard_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -28,14 +30,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'SIGAP Posyandu',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomePage(),
-        '/login-test': (context) => const LoginTestPage(),
+        '/': (context) => const SplashPage(),
+        '/login': (context) => const LoginPage(),
+        '/home': (context) => const DashboardPage(),
       },
     );
   }
