@@ -39,10 +39,20 @@ class _SplashPageState extends State<SplashPage>
 
     if (!mounted) return;
 
-    Navigator.pushReplacementNamed(
-      context,
-      isLoggedIn ? '/home' : '/login',
-    );
+    if (!isLoggedIn) {
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    final category = await authService.getCategory();
+
+    if (!mounted) return;
+
+    if (category != null) {
+      Navigator.pushReplacementNamed(context, category.route);
+    } else {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
   }
 
   @override
@@ -66,7 +76,7 @@ class _SplashPageState extends State<SplashPage>
                 width: 224,
                 height: 224,
                 decoration: const BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.circleLight,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -78,7 +88,7 @@ class _SplashPageState extends State<SplashPage>
                 width: 288,
                 height: 288,
                 decoration: const BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.circleLight,
                   shape: BoxShape.circle,
                 ),
               ),

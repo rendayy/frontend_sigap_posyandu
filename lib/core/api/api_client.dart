@@ -6,9 +6,9 @@ class ApiClient {
   late final Dio dio;
   final TokenService _tokenService;
 
-  ApiClient({TokenService? tokenService})
+  ApiClient({TokenService? tokenService, Dio? customDio})
     : _tokenService = tokenService ?? TokenService() {
-    dio = Dio(
+    dio = customDio ?? Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 10),
@@ -16,6 +16,8 @@ class ApiClient {
         headers: {'Content-Type': 'application/json'},
       ),
     );
+
+    if (customDio != null) return;
 
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {

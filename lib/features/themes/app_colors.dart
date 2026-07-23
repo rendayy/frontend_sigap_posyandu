@@ -22,4 +22,16 @@ class AppColors {
   static const greenLight = Color(0xFFF0FDF4);
 
   static const splashBackground = Color(0xFF1E1E1E);
+
+  static const purpleLight = Color(0xFFFAF5FF);
+  static const pinkVivid = Color(0xFFE60076);
+  static const greenDark = Color(0xFF008236);
+  static const darkOrange = Color(0xFF9A3412);
+  static const purple = Color(0xFF8200DB);
+  static const tagBg = Color(0xFFF3E8FF);
+  static const tagText = Color(0xFF9810FA);
+  static const beige = Color(0xFFE5BDA0);
+  static const gold = Color(0xFFFFAE3C);
+  static const goldDark = Color(0xFFE8BF39);
+  static const circleLight = Color(0xFFD6E4FF);
 }

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
-import 'package:frontend_posyandu/services/fcm_service.dart';
+import 'package:frontend_posyandu/core/services/fcm/fcm_service.dart';
+import 'package:frontend_posyandu/widgets/common/category_picker_dialog.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -13,11 +14,29 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   String? _fcmStatus;
+  String? _currentCategory;
 
   @override
   void initState() {
     super.initState();
     _checkFcmStatus();
+    _loadCategory();
+  }
+
+  Future<void> _loadCategory() async {
+    final category = await AuthService().getCategory();
+    setState(() {
+      _currentCategory = category?.label ?? 'Belum dipilih';
+    });
+  }
+
+  Future<void> _changeCategory() async {
+    final category = await CategoryPickerDialog.show(context);
+    if (category != null) {
+      await AuthService().saveCategory(category);
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, category.route);
+    }
   }
 
   Future<void> _checkFcmStatus() async {
@@ -105,7 +124,53 @@ class _DashboardPageState extends State<DashboardPage> {
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.category, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Kategori',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            _currentCategory ?? 'Memuat...',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _changeCategory,
+                      child: Text(
+                        'Ganti',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
