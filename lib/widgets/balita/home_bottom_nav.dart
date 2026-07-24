@@ -17,8 +17,6 @@ class HomeBottomNav extends StatelessWidget {
     final items = [
       _NavItem(label: 'Beranda', icon: Icons.home_outlined, activeIcon: Icons.home),
       _NavItem(label: 'Riwayat', icon: Icons.history_outlined, activeIcon: Icons.history),
-      _NavItem(label: 'Jadwal', icon: Icons.calendar_month_outlined, activeIcon: Icons.calendar_month),
-      _NavItem(label: 'Notifikasi', icon: Icons.notifications_outlined, activeIcon: Icons.notifications),
       _NavItem(label: 'Profil', icon: Icons.person_outline, activeIcon: Icons.person),
     ];
 
@@ -55,7 +53,7 @@ class HomeBottomNav extends StatelessWidget {
                     Text(
                       item.label,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: isActive ? AppColors.primary : AppColors.textSecondary,
                         height: 1.5,

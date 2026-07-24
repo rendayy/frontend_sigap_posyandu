@@ -111,9 +111,13 @@ class FCMService {
     }
   }
 
+  bool get _hasValidJwt => _jwtToken != null && _jwtToken!.split('.').length == 3;
+
+  bool _isValidJwt(String token) => token.split('.').length == 3;
+
   Future<void> _onTokenRefreshed(String? newToken) async {
     log('FCM Token refreshed: $newToken', name: 'FCMService');
-    if (newToken != null && _jwtToken != null) {
+    if (newToken != null && _hasValidJwt) {
       await registerTokenToServer(newToken, _jwtToken!);
     }
   }
@@ -159,7 +163,8 @@ class FCMService {
 
   Future<bool> registerTokenToServer(String? token, String jwtToken,
       {int maxRetries = 3}) async {
-    if (token == null) return false;
+    if (token == null || token.isEmpty) return false;
+    if (!_isValidJwt(jwtToken)) return false;
 
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       try {

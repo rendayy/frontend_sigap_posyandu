@@ -150,19 +150,19 @@ class ProfileSummaryCard extends StatelessWidget {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Text(
-                            'Pemantauan Terakhir',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.pinkLight,
-                            ),
+                        Text(
+                          'Pemantauan Terakhir',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.pinkLight,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            lastCheckupDate,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          lastCheckupDate,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: AppColors.white,
                             ),
@@ -361,7 +361,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColors.textSecondary,
             ),
@@ -382,12 +382,12 @@ class _StatCard extends StatelessWidget {
               const SizedBox(width: 2),
               Padding(
                 padding: const EdgeInsets.only(bottom: 1),
-                child: Text(
-                  unit,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
+                  child: Text(
+                    unit,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -444,7 +444,7 @@ class StatusGiziInfoCard extends StatelessWidget {
                   Text(
                     'Status Gizi',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                     ),
@@ -456,7 +456,7 @@ class StatusGiziInfoCard extends StatelessWidget {
                   Text(
                     'Berat badan menurut usia',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: AppColors.textSecondary,
                     ),
@@ -537,7 +537,7 @@ class ImunisasiCard extends StatelessWidget {
                       Text(
                         'Status Imunisasi',
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
                         ),
@@ -563,7 +563,7 @@ class ImunisasiCard extends StatelessWidget {
                   child: Text(
                     isLengkap ? 'Lengkap' : 'Tidak Lengkap',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: isLengkap ? AppColors.greenDark : AppColors.orange,
                     ),
@@ -640,7 +640,7 @@ class JadwalCard extends StatelessWidget {
                 Text(
                   'Jadwal Posyandu Berikutnya',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: AppColors.orange,
                   ),
@@ -675,7 +675,7 @@ class JadwalCard extends StatelessWidget {
                       Text(
                         month,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: AppColors.orange.withValues(alpha: 0.7),
                           height: 1.5,
@@ -707,21 +707,21 @@ class JadwalCard extends StatelessWidget {
                       Text(
                         time,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w400,
                           color: AppColors.textSecondary,
                         ),
                       ),
-                    const SizedBox(height: 2),
-                    if (isLoading)
-                      const SkeletonWidget(width: 96, height: 12)
-                    else
-                      Text(
-                        location,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textSecondary,
+                      const SizedBox(height: 2),
+                      if (isLoading)
+                        const SkeletonWidget(width: 96, height: 12)
+                      else
+                        Text(
+                          location,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textSecondary,
                         ),
                       ),
                   ],
@@ -783,7 +783,7 @@ class PerkembanganCard extends StatelessWidget {
                 Text(
                   'Perkembangan $usia bulan',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: AppColors.purple,
                   ),
@@ -802,15 +802,15 @@ class PerkembanganCard extends StatelessWidget {
               ],
             )
           else
-            Text(
-              description,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary,
-                height: 1.6,
+              Text(
+                description,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.6,
+                ),
               ),
-            ),
           const SizedBox(height: 10),
           if (isLoading)
             const Row(
@@ -835,7 +835,7 @@ class PerkembanganCard extends StatelessWidget {
                 child: Text(
                   '$tag \u2197',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w800,
                     color: AppColors.tagText,
                   ),

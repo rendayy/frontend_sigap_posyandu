@@ -243,7 +243,194 @@ dependencies:
 
 ---
 
-## 8. Checklist Implementasi Modul Baru
+## 8. Stale-While-Revalidate (Auto-refresh)
+
+Setiap modul dengan data dinamis WAJIB menerapkan stale-while-revalidate untuk menghindari re-fetch tidak perlu saat navigasi tab.
+
+### 8.1. Prinsip
+
+```
+[View aktif]
+  ├── Data belum pernah di-fetch        → fetch (tampilkan skeleton)
+  ├── Data masih segar (< 30 detik)     → tampilkan langsung (skip fetch)
+  ├── Data sudah basi (≥ 30 detik)      → tampilkan data lama + silent fetch di background
+  │     ├── sukses: update UI tanpa skeleton
+  │     └── gagal: tetap pakai data lama, snackbar error
+  └── Pull-to-refresh                   → force fetch (abaikan stale)
+```
+
+### 8.2. Menggunakan `loadModuleData` dengan `staleAfter`
+
+```dart
+Future<void> _loadData({bool force = false}) async {
+  await loadModuleData(
+    helper: _helper,
+    getModuleId: () => AuthService().getModuleId(),
+    fetchFromApi: (id) => BalitaService().getBalitaById(id),
+    cacheManager: _cache,
+    setState: () => setState(() {}),
+    context: context,
+    staleAfter: force ? null : const Duration(seconds: 30),
+  );
+}
+```
+
+`staleAfter` otomatis:
+- Skip fetch jika data ada dan belum basi
+- Silent refresh (tanpa skeleton) jika data ada dan sudah basi
+- Tampilkan skeleton jika belum pernah fetch
+
+### 8.3. IndexedStack untuk Navigasi Tab
+
+Gunakan `IndexedStack` agar view tetap alive saat berpindah tab (tidak recreate → tidak re-fetch).
+
+```dart
+body: IndexedStack(
+  index: _currentTab,
+  children: [
+    HomeView(),
+    RiwayatView(),  // dibuat sekali, tetap alive
+  ],
+),
+```
+
+### 8.3a. PageView untuk Navigasi Swipe Antar Tab
+
+Untuk mendukung navigasi swipe (slide) antar halaman, gunakan `PageView` + `PageController` sebagai pengganti (atau pelengkap) `IndexedStack`. Pattern ini WAJIB diterapkan di modul yang memiliki halaman Beranda dan Riwayat agar user bisa swipe.
+
+```dart
+class _ModulPageState extends State<ModulPage> {
+  late final PageController _pageController;
+  int _bottomNavIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onNavTap(int index) {
+    if (index == 0 || index == 1) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else if (index == 2) {
+      Navigator.pushNamed(context, '/profile');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          if (_bottomNavIndex == 0)
+            _buildHomeHeader()
+          else
+            _buildRiwayatHeader(),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              onPageChanged: (index) {
+                setState(() => _bottomNavIndex = index);
+              },
+              children: [
+                _buildHomeContent(),
+                _buildRiwayatContent(),
+              ],
+            ),
+          ),
+          HomeBottomNav(
+            currentIndex: _bottomNavIndex,
+            onTap: _onNavTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+#### Aturan
+- `PageView` hanya untuk halaman yang ingin di-swipe (biasanya Beranda & Riwayat)
+- Halaman lain (Profil, detail, form) tetap via `Navigator.push` / `Navigator.pushNamed`, bukan bagian dari `PageView`
+- `onPageChanged` WAJIB dipasang untuk sinkronisasi indeks bottom nav
+- `AlwaysScrollableScrollPhysics()` agar swipe tidak terhalang scroll widget di dalamnya
+- `PageController` WAJIB di-`dispose` di method `dispose()`
+- Header di luar `PageView` dan berubah sesuai `_bottomNavIndex` — bukan di dalam masing-masing halaman
+- Back button di riwayat header memanggil `_pageController.animateToPage(0)` untuk kembali ke Beranda
+- State halaman anak (`RiwayatView`, dll) **WAJIB** menggunakan `AutomaticKeepAliveClientMixin` agar state tetap alive dan `stale-while-revalidate` berfungsi:
+
+  ```dart
+  class _RiwayatViewState extends State<RiwayatView>
+      with AutomaticKeepAliveClientMixin {
+
+    @override
+    bool get wantKeepAlive => true;
+
+    @override
+    Widget build(BuildContext context) {
+      updateKeepAlive();
+      // ... build content ...
+    }
+  }
+  ```
+
+---
+
+### 8.4. Foreground Refresh via `WidgetsBindingObserver`
+
+Untuk halaman standalone (bukan embedded), tambahkan observer agar refresh saat app kembali ke foreground:
+
+```dart
+class _PageState extends State<Page> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _silentRefreshIfStale();
+    }
+  }
+}
+```
+
+### 8.5. Stale Threshold
+
+Gunakan `Duration(seconds: 30)` sebagai default. Nilai ini cukup untuk:
+- Mencegah re-fetch saat user cepat berpindah tab
+- Memastikan data tidak lebih dari 30 detik basi
+- Tidak membebani server dengan request tidak perlu
+
+### 8.6. Aturan
+
+- `staleAfter` HARUS dilewati (null) saat pull-to-refresh
+- Silent refresh yang gagal TIDAK boleh menampilkan error screen — hanya snackbar
+- Data cache (SharedPreferences) tetap menjadi fallback ketika API gagal total
+- Halaman standalone (dibuka via Navigator.push) TETAP perlu stale check di initState
+
+---
+
+## 9. Checklist Implementasi Modul Baru
 
 - [ ] Skeleton loading per widget (no `CircularProgressIndicator`)
 - [ ] `CacheManager<T>` untuk persist data lokal
@@ -252,3 +439,34 @@ dependencies:
 - [ ] 401 → redirect login
 - [ ] Error message bahasa awam
 - [ ] Gunakan `ModulePageMixin<T>` atau patuhi state convention manual
+- [ ] Stale-while-revalidate dengan `staleAfter: Duration(seconds: 30)`
+- [ ] `IndexedStack` untuk navigasi tab dalam satu halaman
+
+---
+
+## 10. Font Size Standard
+
+Semua teks dalam modul WAJIB menggunakan dua ukuran font standar berikut:
+
+| Kategori | Ukuran | `fontWeight` | Contoh |
+|----------|--------|--------------|--------|
+| **Body** | `14` | `w400` / `w600` / `w700` | Label, value, deskripsi, subtitle, isi konten, judul card, tombol |
+| **Caption** | `12` | `w400` / `w600` / `w700` / `w800` | Unit, tag, badge, nav label, stat label, subtitle minor |
+
+### Pengecualian (sengaja dibesarkan)
+
+Ukuran berikut BOLEH berbeda dan digunakan untuk hierarki visual:
+
+| Ukuran | Penggunaan |
+|--------|-----------|
+| `48` | Hero number (usia balita) |
+| `18` | Angka hari pada kartu jadwal |
+| `16` | Nama balita, inisial, judul section ("Riwayat Pengukuran"), unit "Bulan" di samping hero |
+| `15` | AppBar title, header judul halaman |
+
+### Aturan
+
+- DILARANG menggunakan ukuran font **9, 10, 11, 13** di modul mana pun — harus dinaikkan ke 12 (caption) atau 14 (body).
+- `fontWeight` tidak dibatasi — boleh disesuaikan dengan kebutuhan hierarki visual (semakin tebal = semakin penting).
+- Semua teks WAJIB menggunakan `GoogleFonts.plusJakartaSans`.
+- Ukuran di luar tabel pengecualian hanya boleh digunakan jika ada persetujuan tim. Jika ragu, gunakan 14 untuk body, 12 untuk caption.

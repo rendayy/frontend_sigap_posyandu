@@ -148,7 +148,7 @@ class GreetingSection extends StatelessWidget {
                   Text(
                     'Halo,',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: AppColors.textSecondary,
                     ),

@@ -61,7 +61,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
                         Text(
                           '${d.measurements.length}x pengukuran',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
+                            fontSize: 14,
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -71,7 +71,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
                     Text(
                       '${_chartTypeLabel(d.chartType)} — ${d.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan'}',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
+                        fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -80,7 +80,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
                       Text(
                         d.standardSource,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -115,7 +115,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
                             style: ButtonStyle(
                               visualDensity: VisualDensity.compact,
                               textStyle: WidgetStatePropertyAll(
-                                GoogleFonts.plusJakartaSans(fontSize: 12),
+                                GoogleFonts.plusJakartaSans(fontSize: 14),
                               ),
                             ),
                           ),
@@ -126,7 +126,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
                     Text(
                       'Fase Pertumbuhan: $_rangeLabel',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
@@ -188,7 +188,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
                                 Text(
                                   '${_formatDate(m.tanggalPantau)} — ${m.berat} kg',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
@@ -198,7 +198,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
                             Text(
                               _measurementStatusLabel(m.statusGizi),
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: _measurementStatusColor(m.statusGizi),
                               ),

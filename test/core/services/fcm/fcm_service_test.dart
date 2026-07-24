@@ -41,41 +41,48 @@ void main() {
     });
 
     group('network methods', () {
+      final testJwt = 'header.payload.signature';
+
       test('registerTokenToServer returns false when token is null', () async {
-        final result = await FCMService().registerTokenToServer(null, 'jwt');
+        final result = await FCMService().registerTokenToServer(null, testJwt);
         expect(result, isFalse);
       });
 
       test('registerTokenToServer returns false for empty token', () async {
-        final result = await FCMService().registerTokenToServer('', 'jwt');
+        final result = await FCMService().registerTokenToServer('', testJwt);
+        expect(result, isFalse);
+      });
+
+      test('registerTokenToServer returns false for invalid JWT', () async {
+        final result = await FCMService().registerTokenToServer('valid_token', 'not-a-jwt');
         expect(result, isFalse);
       });
 
       test('registerTokenToServer returns true on 200', () async {
         FCMService().setDioForTesting(_mockDio(200));
 
-        final result = await FCMService().registerTokenToServer('valid_token', 'jwt');
+        final result = await FCMService().registerTokenToServer('valid_token', testJwt);
         expect(result, isTrue);
       });
 
       test('registerTokenToServer returns true on 201', () async {
         FCMService().setDioForTesting(_mockDio(201));
 
-        final result = await FCMService().registerTokenToServer('valid_token', 'jwt');
+        final result = await FCMService().registerTokenToServer('valid_token', testJwt);
         expect(result, isTrue);
       });
 
       test('registerTokenToServer returns false on 400', () async {
         FCMService().setDioForTesting(_mockDio(400));
 
-        final result = await FCMService().registerTokenToServer('valid_token', 'jwt');
+        final result = await FCMService().registerTokenToServer('valid_token', testJwt);
         expect(result, isFalse);
       });
 
       test('registerTokenToServer returns false on network error', () async {
         FCMService().setDioForTesting(_mockDio(0, throwError: true));
 
-        final result = await FCMService().registerTokenToServer('valid_token', 'jwt');
+        final result = await FCMService().registerTokenToServer('valid_token', testJwt);
         expect(result, isFalse);
       });
 

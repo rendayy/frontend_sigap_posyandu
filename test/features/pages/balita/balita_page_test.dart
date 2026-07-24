@@ -84,7 +84,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Andi Pratama'), findsOneWidget);
-    expect(find.text('Status Gizi: Baik'), findsOneWidget);
+    expect(find.text('Baik'), findsOneWidget);
     expect(find.textContaining('Lengkap'), findsWidgets);
   });
 

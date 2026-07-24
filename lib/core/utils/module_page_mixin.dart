@@ -9,6 +9,7 @@ class ModulePageHelper<T> {
   bool isFromCache = false;
   bool isReconnecting = false;
   String? error;
+  DateTime? lastFetchTime;
 
   void startLoad() {
     isLoading = true;
@@ -18,6 +19,7 @@ class ModulePageHelper<T> {
 
   void onSuccess(T? fetched) {
     data = fetched;
+    lastFetchTime = DateTime.now();
     isFromCache = false;
     isReconnecting = false;
     isLoading = false;
@@ -37,6 +39,11 @@ class ModulePageHelper<T> {
   }
 
   bool get showSkeleton => isLoading && data == null;
+
+  bool isStale(Duration threshold) {
+    if (lastFetchTime == null) return true;
+    return DateTime.now().difference(lastFetchTime!) > threshold;
+  }
 }
 
 Future<void> loadModuleData<T>({
@@ -47,9 +54,18 @@ Future<void> loadModuleData<T>({
   required VoidCallback setState,
   required BuildContext context,
   String? moduleId,
+  Duration? staleAfter,
 }) async {
-  helper.startLoad();
-  setState();
+  if (staleAfter != null && helper.data != null && !helper.isStale(staleAfter)) {
+    return;
+  }
+
+  final isSilent = staleAfter != null && helper.data != null;
+
+  if (!isSilent) {
+    helper.startLoad();
+    setState();
+  }
 
   try {
     moduleId ??= await getModuleId();
@@ -70,6 +86,20 @@ Future<void> loadModuleData<T>({
       await AuthService().logout();
       if (context.mounted) {
         Navigator.pushReplacementNamed(context, '/login');
+      }
+      return;
+    }
+
+    if (isSilent) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(friendlyError(e)),
+            backgroundColor: const Color(0xFFFFA726),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
       return;
     }
