@@ -19,6 +19,13 @@ class GrowthMeasurement {
       usiaBulan: json['usia_bulan'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'berat': berat,
+    'status_gizi': statusGizi,
+    'tanggal_pantau': tanggalPantau,
+    'usia_bulan': usiaBulan,
+  };
 }
 
 class StandardCurvePoint {
@@ -33,6 +40,11 @@ class StandardCurvePoint {
       usia: json['usia'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'nilai': nilai,
+    'usia': usia,
+  };
 }
 
 class GrowthChartResponse {
@@ -83,4 +95,15 @@ class GrowthChartResponse {
       standardSource: json['standard_source'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'chart_type': chartType,
+    'id_anggota': idAnggota,
+    'jenis_kelamin': jenisKelamin,
+    'latest_status': latestStatus,
+    'measurements': measurements.map((m) => m.toJson()).toList(),
+    'standard_curves': standardCurves.map((k, v) => MapEntry(k, v.map((p) => p.toJson()).toList())),
+    'zone_labels': zoneLabels,
+    'standard_source': standardSource,
+  };
 }

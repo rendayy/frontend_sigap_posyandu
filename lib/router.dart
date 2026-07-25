@@ -8,6 +8,7 @@ import 'features/pages/posbindu/posbindu_page.dart';
 import 'features/pages/lansia/lansia_page.dart';
 import 'features/pages/ibu_hamil/ibu_hamil_page.dart';
 import 'features/pages/profil/profile_page.dart';
+import 'features/pages/profil/edit_profile_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -22,5 +23,6 @@ Map<String, Widget Function(BuildContext)> get appRoutes {
     '/lansia': (context) => const LansiaPage(),
     '/ibu-hamil': (context) => const IbuHamilPage(),
     '/profile': (context) => const ProfilePage(),
+    '/edit-profile': (context) => const EditProfilePage(),
   };
 }

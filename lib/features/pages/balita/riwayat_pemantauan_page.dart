@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/core/models/balita/pemantauan_balita_model.dart';
+import 'package:frontend_posyandu/core/services/balita/balita_service.dart';
 import 'package:frontend_posyandu/core/services/balita/pemantauan_balita_service.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/features/pages/balita/balita_detail_page.dart';
+import 'package:frontend_posyandu/features/pages/balita/growth_chart_page.dart';
 import 'package:frontend_posyandu/widgets/balita/pemantauan_card.dart';
 import 'package:frontend_posyandu/widgets/balita/home_bottom_nav.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
@@ -13,12 +15,14 @@ import 'package:frontend_posyandu/core/utils/errors.dart';
 
 class RiwayatPemantauanPage extends StatefulWidget {
   final PemantauanBalitaService? pemantauanService;
+  final BalitaService? balitaService;
   final AuthService? authService;
   final bool embedded;
 
   const RiwayatPemantauanPage({
     super.key,
     this.pemantauanService,
+    this.balitaService,
     this.authService,
     this.embedded = false,
   });
@@ -228,7 +232,15 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
       return Column(
         children: [
           _buildTabBar(),
-          Expanded(child: _buildBody()),
+          Expanded(
+            child: IndexedStack(
+              index: _selectedTab,
+              children: [
+                _buildPertumbuhanTab(),
+                _buildGrafikTab(),
+              ],
+            ),
+          ),
         ],
       );
     }
@@ -254,7 +266,15 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
       body: Column(
         children: [
           _buildTabBar(),
-          Expanded(child: _buildBody()),
+          Expanded(
+            child: IndexedStack(
+              index: _selectedTab,
+              children: [
+                _buildPertumbuhanTab(),
+                _buildGrafikTab(),
+              ],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: HomeBottomNav(
@@ -309,11 +329,15 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
     );
   }
 
-  Widget _buildBody() {
-    if (_selectedTab == 1) {
-      return _buildPlaceholder('Halaman Grafik');
-    }
+  Widget _buildGrafikTab() {
+    return GrowthChartPage(
+      embedded: true,
+      balitaService: widget.balitaService,
+      authService: _authService,
+    );
+  }
 
+  Widget _buildPertumbuhanTab() {
     if (_error != null && _items.isEmpty) {
       return _buildError();
     }

@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend_posyandu/core/models/balita/pemantauan_balita_model.dart';
 import 'package:frontend_posyandu/core/models/balita/pemantauan_balita_detail_model.dart';
+import 'package:frontend_posyandu/core/models/balita/growth_chart_model.dart';
 import 'package:frontend_posyandu/core/services/balita/pemantauan_balita_service.dart';
+import 'package:frontend_posyandu/core/services/balita/balita_service.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/core/utils/errors.dart';
 import 'package:frontend_posyandu/features/pages/balita/riwayat_pemantauan_page.dart';
@@ -63,6 +66,25 @@ class _MockPemantauanService extends PemantauanBalitaService {
   }
 }
 
+class _MockBalitaService extends BalitaService {
+  final GrowthChartResponse? stubGrowthChartData;
+  final bool stubThrowError;
+  _MockBalitaService({this.stubGrowthChartData, this.stubThrowError = false}) : super();
+
+  @override
+  Future<GrowthChartResponse> getGrowthChart(String idBalita) async {
+    if (stubThrowError) throw NetworkException();
+    if (stubGrowthChartData != null) return stubGrowthChartData!;
+    throw Exception('not mocked');
+  }
+
+  @override
+  Future<File> downloadKms(String idBalita) async {
+    if (stubThrowError) throw NetworkException();
+    return File('${Directory.systemTemp.path}/test_kms.pdf');
+  }
+}
+
 PemantauanBalitaItem _makeItem({int no = 1, int usiaBulan = 34}) {
   return PemantauanBalitaItem(
     idPantau: 'p-00$no',
@@ -86,6 +108,26 @@ PemantauanListResponse _makeResponse({int totalPages = 3}) {
     data: List.generate(5, (i) => _makeItem(no: i + 1)),
     pagination: PaginationMeta(page: 1, limit: 5, total: 14, totalPages: totalPages),
     success: true,
+  );
+}
+
+GrowthChartResponse _makeGrowthChartResponse() {
+  return GrowthChartResponse(
+    chartType: 'BB/U',
+    idAnggota: 'a-001',
+    jenisKelamin: 'L',
+    latestStatus: 'gizi_baik',
+    measurements: [
+      GrowthMeasurement(berat: 12.5, statusGizi: 'gizi_baik', tanggalPantau: '2026-06-12', usiaBulan: 1),
+      GrowthMeasurement(berat: 12.8, statusGizi: 'gizi_kurang', tanggalPantau: '2026-06-15', usiaBulan: 5),
+    ],
+    standardCurves: {
+      'median': [StandardCurvePoint(nilai: 9.6, usia: 12)],
+      '-2SD': [StandardCurvePoint(nilai: 7.7, usia: 12)],
+      '+2SD': [StandardCurvePoint(nilai: 12.0, usia: 12)],
+    },
+    zoneLabels: {'-2SD': 'Gizi Kurang', '+2SD': 'Kelebihan Berat Badan', 'median': 'Normal'},
+    standardSource: 'WHO Child Growth Standards 2006',
   );
 }
 
@@ -173,20 +215,31 @@ void main() {
       expect(find.text('Hubungkan'), findsOneWidget);
     });
 
-    testWidgets('tab Grafik shows placeholder', (tester) async {
+    testWidgets('tab Grafik shows growth chart when data loaded',
+        (tester) async {
       final authService = _MockAuthService(stubModuleId: 'mod-001');
       final pemantauanService = _MockPemantauanService(stubData: _makeResponse());
+      final balitaService = _MockBalitaService(
+        stubGrowthChartData: _makeGrowthChartResponse(),
+      );
 
       await tester.pumpWidget(_buildTestApp(
         RiwayatPemantauanPage(
           pemantauanService: pemantauanService,
+          balitaService: balitaService,
           authService: authService,
         ),
       ));
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Halaman Grafik'), findsNothing);
+      await tester.tap(find.text('Grafik'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kartu Menuju Sehat (KMS)'), findsOneWidget);
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      expect(find.text('Riwayat Pengukuran'), findsOneWidget);
     });
 
     testWidgets('hides Muat Lainnya when no more pages',

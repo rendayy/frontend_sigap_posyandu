@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +35,12 @@ class _MockBalitaService extends BalitaService {
 
   @override
   String getDownloadKmsUrl(String idBalita) => 'http://test/$idBalita/download-kms';
+
+  @override
+  Future<File> downloadKms(String idBalita) async {
+    if (stubThrowError) throw NetworkException();
+    return File('${Directory.systemTemp.path}/test_kms.pdf');
+  }
 }
 
 BalitaDetailResponse _makeBalita() => const BalitaDetailResponse(

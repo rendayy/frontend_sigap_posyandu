@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:frontend_posyandu/config.dart';
 import 'package:frontend_posyandu/core/models/balita/balita_model.dart';
@@ -75,5 +76,13 @@ class BalitaService {
 
   String getDownloadKmsUrl(String idBalita) {
     return '${AppConfig.apiBaseUrl}/api/balita/$idBalita/download-kms';
+  }
+
+  Future<File> downloadKms(String idBalita) async {
+    final url = '/api/balita/$idBalita/download-kms';
+    final dir = await Directory.systemTemp.createTemp('kms_');
+    final file = File('${dir.path}/kms_$idBalita.pdf');
+    await _apiClient.dio.download(url, file.path);
+    return file;
   }
 }

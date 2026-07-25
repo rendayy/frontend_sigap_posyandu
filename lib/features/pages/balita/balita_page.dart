@@ -11,6 +11,8 @@ import 'package:frontend_posyandu/widgets/balita/home_balita_sections.dart';
 import 'package:frontend_posyandu/widgets/balita/home_bottom_nav.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 
+import 'package:frontend_posyandu/features/pages/profil/profile_page.dart';
+
 class BalitaPage extends StatefulWidget {
   final BalitaService? balitaService;
   final AuthService? authService;
@@ -83,15 +85,11 @@ class _BalitaPageState extends State<BalitaPage> {
   }
 
   void _onNavTap(int index) {
-    if (index == 0 || index == 1) {
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/profile');
-    }
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   Widget _buildBody() {
@@ -104,6 +102,7 @@ class _BalitaPageState extends State<BalitaPage> {
       children: [
         _buildHomeContent(),
         const RiwayatPemantauanPage(embedded: true),
+        const ProfilePage(),
       ],
     );
   }

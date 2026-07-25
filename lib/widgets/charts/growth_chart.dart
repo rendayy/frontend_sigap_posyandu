@@ -43,7 +43,7 @@ class GrowthChart extends StatelessWidget {
           Text(
             'Grafik ${_chartTypeLabel(data.chartType)}',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,
             ),
@@ -98,20 +98,20 @@ class GrowthChart extends StatelessWidget {
                       : Text(
                           'Berat (kg)',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
                         ),
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 32,
+                    reservedSize: 36,
                     interval: 2,
                     getTitlesWidget: (value, _) {
                       if (value % 2 == 0) {
                         return Text(
                           '${value.toInt()}',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: compact ? 9 : 11,
+                            fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
                         );
@@ -126,20 +126,20 @@ class GrowthChart extends StatelessWidget {
                       : Text(
                           'Usia (Bulan)',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
                         ),
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 24,
+                    reservedSize: 28,
                     interval: 2,
                     getTitlesWidget: (value, _) {
                       if (value % 2 == 0) {
                         return Text(
                           '${value.toInt()}',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: compact ? 9 : 11,
+                            fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
                         );
@@ -154,7 +154,7 @@ class GrowthChart extends StatelessWidget {
                       : Text(
                           'Berat (kg)',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -167,7 +167,7 @@ class GrowthChart extends StatelessWidget {
                         return Text(
                           '${value.toInt()}',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: compact ? 9 : 11,
+                            fontSize: 12,
                             color: AppColors.textSecondary,
                           ),
                         );
@@ -190,25 +190,7 @@ class GrowthChart extends StatelessWidget {
                 curveKeys, filteredMeasurements, themeColor, ageMin, ageMax,
               ),
               betweenBarsData: _buildBetweenBars(curveKeys, ageMin, ageMax),
-              lineTouchData: LineTouchData(
-                enabled: !compact,
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipItems: (touchedSpots) {
-                    return touchedSpots.map((spot) {
-                      final isBaby = spot.barIndex == curveKeys.length;
-                      final label = isBaby ? 'Balita' : curveKeys[spot.barIndex];
-                      return LineTooltipItem(
-                        '$label\n${spot.y.toStringAsFixed(1)} kg (${spot.x.toInt()} bln)',
-                        TextStyle(
-                          color: isBaby ? themeColor : _curveColor(spot.barIndex),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      );
-                    }).toList();
-                  },
-                ),
-              ),
+              lineTouchData: const LineTouchData(enabled: false),
             ),
             duration: const Duration(milliseconds: 300),
           ),
@@ -378,7 +360,7 @@ class GrowthChart extends StatelessWidget {
                   item.$1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 8,
+                    fontSize: 12,
                     color: const Color(0xFF4B5563),
                   ),
                 ),
