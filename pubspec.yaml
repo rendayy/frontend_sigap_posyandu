@@ -54,6 +54,16 @@ dependencies:
   google_fonts: ^6.3.3
   shared_preferences: ^2.1.1
 
+  # Charts (sesuai PRD)
+  fl_chart: ^0.70.0
+
+  # SVG rendering
+  flutter_svg: ^2.0.17
+
+  # URL launcher untuk download KMS
+  url_launcher: ^6.1.10
+  open_filex: ^4.7.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

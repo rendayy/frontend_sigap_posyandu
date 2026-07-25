@@ -2,8 +2,9 @@ import 'dart:developer';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'fcm_background_handler.dart';
-import '../config.dart';
+import '../../../config.dart';
 
 class FCMService {
   static final FCMService _instance = FCMService._internal();
@@ -16,8 +17,14 @@ class FCMService {
   String? _jwtToken;
   void Function(Map<String, dynamic>? data)? _onNotificationTap;
   void Function(String? title, String? body)? _onMessageReceived;
+  Dio? _customDio;
 
-  Dio get _dio => Dio(BaseOptions(
+  @visibleForTesting
+  void setDioForTesting(Dio dio) {
+    _customDio = dio;
+  }
+
+  Dio get _dio => _customDio ?? Dio(BaseOptions(
     baseUrl: AppConfig.apiBaseUrl,
     headers: {'Content-Type': 'application/json'},
   ));
@@ -104,9 +111,13 @@ class FCMService {
     }
   }
 
+  bool get _hasValidJwt => _jwtToken != null && _jwtToken!.split('.').length == 3;
+
+  bool _isValidJwt(String token) => token.split('.').length == 3;
+
   Future<void> _onTokenRefreshed(String? newToken) async {
     log('FCM Token refreshed: $newToken', name: 'FCMService');
-    if (newToken != null && _jwtToken != null) {
+    if (newToken != null && _hasValidJwt) {
       await registerTokenToServer(newToken, _jwtToken!);
     }
   }
@@ -152,7 +163,8 @@ class FCMService {
 
   Future<bool> registerTokenToServer(String? token, String jwtToken,
       {int maxRetries = 3}) async {
-    if (token == null) return false;
+    if (token == null || token.isEmpty) return false;
+    if (!_isValidJwt(jwtToken)) return false;
 
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       try {

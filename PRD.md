@@ -401,6 +401,8 @@ Semua endpoint dikelola di `lib/core/api/endpoints.dart`:
 
 ## 7. Standar Kode
 
+> **📌 Lihat juga:** [`standar-modul.md`](./standar-modul.md) — standar implementasi UI/UX setiap modul (skeleton loading, cache lokal, offline banner, error handling, pull-to-refresh).
+
 ### 7.1 Penamaan
 - **File/Directory**: `snake_case`
 - **Class/Enum**: `PascalCase`
@@ -411,13 +413,16 @@ Semua endpoint dikelola di `lib/core/api/endpoints.dart`:
 - Gunakan `package:` imports, bukan relative path.
 - Barrel export (`widgets.dart`) untuk widget umum.
 
-### 7.3 State Management
+### 7.3 State Management & Loading
 - Tidak menggunakan state management library khusus (seperti Bloc, Provider, Riverpod).
-- State dikelola secara lokal di masing-masing page menggunakan `StatefulWidget` atau controller sederhana.
+- State dikelola secara lokal di masing-masing page menggunakan `StatefulWidget` + `ModulePageHelper<T>`.
+- Loading menggunakan **skeleton per widget** (bukan `CircularProgressIndicator`). Lihat `SkeletonWidget` dan `standar-modul.md#1-loading-skeleton-per-widget`.
+- Data di-cache ke `SharedPreferences` via `CacheManager<T>` dan ditampilkan saat offline dengan banner "Menampilkan data tersimpan". Lihat `standar-modul.md#2-cache-lokal`.
 
 ### 7.4 Error Handling
-- Semua error API ditangani melalui `error_handler.dart` di `lib/core/utils/`.
-- Gunakan pattern `Either` atau Result pattern untuk return value dari service layer.
+- Semua error API ditangani melalui `core/utils/errors.dart` (`ServerException`, `NetworkException`, `friendlyError()`, `isSessionExpired()`).
+- HTTP 401 → redirect ke halaman login. Error lain → tampilkan pesan bahasa awam. Lihat `standar-modul.md#5-error-handling`.
+- Gunakan `loadModuleData()` dari `core/utils/module_page_mixin.dart` untuk alur error + cache fallback otomatis.
 
 ---
 

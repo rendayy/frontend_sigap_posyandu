@@ -1,9 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend_posyandu/core/models/auth/user_model.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
-import 'package:frontend_posyandu/services/fcm_service.dart';
+import 'package:frontend_posyandu/core/services/fcm/fcm_service.dart';
 import 'package:frontend_posyandu/widgets/common/app_text_field.dart';
 import 'package:frontend_posyandu/widgets/common/primary_button.dart';
 
@@ -51,7 +52,14 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+
+      final category = response.user != null
+          ? UserCategory.fromString(response.user!.kategoriAnggota)
+          : null;
+      Navigator.pushReplacementNamed(
+        context,
+        category?.route ?? '/home',
+      );
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
