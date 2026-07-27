@@ -42,6 +42,20 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
   DateTime? _lastFetchTime;
   static const _staleAfter = Duration(seconds: 30);
 
+  int _currentPage = 1;
+  static const _limit = 5;
+
+  int get _totalPages {
+    final total = _data?.measurements.length ?? 0;
+    if (total == 0) return 1;
+    return (total / _limit).ceil();
+  }
+
+  List<GrowthMeasurement> get _currentMeasurements {
+    final all = _data?.measurements ?? [];
+    return all.reversed.skip((_currentPage - 1) * _limit).take(_limit).toList();
+  }
+
   late final BalitaService _balitaService;
   late final AuthService _authService;
   late final CacheManager<GrowthChartResponse> _cache;
@@ -200,6 +214,8 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
           _buildChartCard(d, ageRange),
           const SizedBox(height: 12),
           _buildMeasurementHistory(d),
+          const SizedBox(height: 12),
+          _buildPagination(),
           const SizedBox(height: 24),
         ],
       ),
@@ -491,79 +507,161 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
   }
 
   Widget _buildMeasurementHistory(GrowthChartResponse d) {
+    final items = _currentMeasurements;
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0x14000000)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0D000000), blurRadius: 2, offset: Offset(0, 1)),
-          BoxShadow(color: Color(0x0D000000), blurRadius: 3, offset: Offset(0, 1)),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Riwayat Pengukuran',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...d.measurements.reversed.map(
-              (m) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: _measurementStatusColor(m.statusGizi),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Usia ${m.usiaBulan} bulan',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '${_formatDate(m.tanggalPantau)} — ${m.berat} kg',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Text(
-                      _measurementStatusLabel(m.statusGizi),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: _measurementStatusColor(m.statusGizi),
-                      ),
-                    ),
-                  ],
+          Row(
+            children: [
+              Icon(Icons.history, size: 18, color: AppColors.textPrimary),
+              const SizedBox(width: 8),
+              Text(
+                'Riwayat Pengukuran',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...items.map(
+            (m) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.monitor_weight_outlined,
+                          size: 20,
+                          color: AppColors.orange,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Usia ${m.usiaBulan} bulan',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatDate(m.tanggalPantau),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${m.berat}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.orange,
+                            ),
+                          ),
+                          Text(
+                            'kg',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPagination() {
+    final total = _totalPages;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (_currentPage > 1)
+          TextButton(
+            onPressed: () => setState(() => _currentPage--),
+            child: Text(
+              'Sebelumnya',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFF97316),
+              ),
             ),
-          ],
+          ),
+        const SizedBox(width: 16),
+        Text(
+          '$_currentPage / $total',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
-      );
+        const SizedBox(width: 16),
+        if (_currentPage < total)
+          TextButton(
+            onPressed: () => setState(() => _currentPage++),
+            child: Text(
+              'Selanjutnya',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFF97316),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildError() {

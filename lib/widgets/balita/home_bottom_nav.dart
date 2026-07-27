@@ -46,7 +46,7 @@ class HomeBottomNav extends StatelessWidget {
                       child: Icon(
                         isActive ? item.activeIcon : item.icon,
                         size: 20,
-                        color: isActive ? AppColors.primary : AppColors.textSecondary,
+                        color: isActive ? AppColors.orange : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -55,7 +55,7 @@ class HomeBottomNav extends StatelessWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: isActive ? AppColors.primary : AppColors.textSecondary,
+                        color: isActive ? AppColors.orange : AppColors.textSecondary,
                         height: 1.5,
                       ),
                     ),
@@ -65,7 +65,7 @@ class HomeBottomNav extends StatelessWidget {
                         height: 2,
                         margin: const EdgeInsets.only(top: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: AppColors.orange,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),

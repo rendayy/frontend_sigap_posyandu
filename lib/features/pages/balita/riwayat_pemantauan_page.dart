@@ -492,34 +492,36 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
   Widget _buildLoadMoreButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Center(
-        child: _loadingMore
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : GestureDetector(
-                onTap: _loadMore,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 10,
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: _loadMore,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.orange,
+            side: const BorderSide(color: AppColors.orange),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          child: _loadingMore
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.orange,
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF97316),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Muat Lainnya',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                )
+              : Text(
+                  'Muat Lainnya',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),
+        ),
       ),
     );
   }
