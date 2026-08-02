@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/core/models/remaja/pemantauan_remaja_model.dart';
-import 'package:frontend_posyandu/widgets/remaja/status_gizi_badge.dart';
+import 'package:frontend_posyandu/widgets/common/status_gizi_badge.dart';
 
 class PemantauanRemajaCard extends StatelessWidget {
   final PemantauanRemajaItem item;

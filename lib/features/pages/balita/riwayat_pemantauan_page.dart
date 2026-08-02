@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend_posyandu/core/models/pagination_meta.dart';
 import 'package:frontend_posyandu/core/models/balita/pemantauan_balita_model.dart';
 import 'package:frontend_posyandu/core/services/balita/balita_service.dart';
 import 'package:frontend_posyandu/core/services/balita/pemantauan_balita_service.dart';
@@ -11,6 +12,7 @@ import 'package:frontend_posyandu/features/pages/balita/growth_chart_page.dart';
 import 'package:frontend_posyandu/widgets/balita/pemantauan_card.dart';
 import 'package:frontend_posyandu/widgets/balita/home_bottom_nav.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
+import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
 import 'package:frontend_posyandu/core/utils/errors.dart';
 
 class RiwayatPemantauanPage extends StatefulWidget {
@@ -340,6 +342,23 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
   Widget _buildPertumbuhanTab() {
     if (_error != null && _items.isEmpty) {
       return _buildError();
+    }
+
+    if (!_loading && _items.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () => _loadData(),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            SizedBox(height: 60),
+            EmptyStateWidget(
+              icon: Icons.child_care_outlined,
+              title: 'Belum Ada Data Pertumbuhan',
+              subtitle: 'Riwayat pertumbuhan balita akan muncul setelah kader melakukan pencatatan.',
+            ),
+          ],
+        ),
+      );
     }
 
     return RefreshIndicator(

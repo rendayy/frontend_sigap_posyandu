@@ -1,4 +1,4 @@
-import 'package:frontend_posyandu/core/models/remaja/pemantauan_remaja_model.dart';
+import 'package:frontend_posyandu/core/models/pagination_meta.dart';
 
 class KegiatanRemajaItem {
   final String idKegiatan;

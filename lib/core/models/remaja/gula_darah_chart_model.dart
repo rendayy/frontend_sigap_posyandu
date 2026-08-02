@@ -41,8 +41,8 @@ class GulaDarahMeasurement {
 
   factory GulaDarahMeasurement.fromJson(Map<String, dynamic> json) =>
       GulaDarahMeasurement(
-        gulaDarah: json['gula_darah'] as int,
-        tanggalPeriksa: json['tanggal_periksa'] as String,
+        gulaDarah: (json['gula_darah'] as num?)?.toInt() ?? 0,
+        tanggalPeriksa: json['tanggal_periksa'] as String? ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -54,32 +54,34 @@ class GulaDarahMeasurement {
 class GulaDarahChartData {
   final List<GulaDarahZone> gulaDarahZones;
   final String label;
-  final int latestGulaDarah;
-  final String latestStatus;
+  final int? latestGulaDarah;
+  final String? latestStatus;
   final List<GulaDarahMeasurement> measurements;
 
   const GulaDarahChartData({
     required this.gulaDarahZones,
     required this.label,
-    required this.latestGulaDarah,
-    required this.latestStatus,
+    this.latestGulaDarah,
+    this.latestStatus,
     required this.measurements,
   });
 
   factory GulaDarahChartData.fromJson(Map<String, dynamic> json) {
-    final zones = (json['gula_darah_zones'] as List)
-        .map((e) => GulaDarahZone.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final zones = (json['gula_darah_zones'] as List?)
+            ?.map((e) => GulaDarahZone.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
 
-    final measurements = (json['measurements'] as List)
-        .map((e) => GulaDarahMeasurement.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final measurements = (json['measurements'] as List?)
+            ?.map((e) => GulaDarahMeasurement.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
 
     return GulaDarahChartData(
       gulaDarahZones: zones,
-      label: json['label'] as String,
-      latestGulaDarah: json['latest_gula_darah'] as int,
-      latestStatus: json['latest_status'] as String,
+      label: json['label'] as String? ?? 'Gula Darah',
+      latestGulaDarah: json['latest_gula_darah'] as int?,
+      latestStatus: json['latest_status'] as String?,
       measurements: measurements,
     );
   }

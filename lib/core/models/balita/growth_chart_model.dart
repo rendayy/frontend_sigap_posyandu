@@ -51,7 +51,7 @@ class GrowthChartResponse {
   final String chartType;
   final String idAnggota;
   final String jenisKelamin;
-  final String latestStatus;
+  final String? latestStatus;
   final List<GrowthMeasurement> measurements;
   final Map<String, List<StandardCurvePoint>> standardCurves;
   final Map<String, String> zoneLabels;
@@ -61,7 +61,7 @@ class GrowthChartResponse {
     required this.chartType,
     required this.idAnggota,
     required this.jenisKelamin,
-    required this.latestStatus,
+    this.latestStatus,
     required this.measurements,
     required this.standardCurves,
     required this.zoneLabels,
@@ -88,7 +88,7 @@ class GrowthChartResponse {
       chartType: json['chart_type'] as String,
       idAnggota: json['id_anggota'] as String,
       jenisKelamin: json['jenis_kelamin'] as String,
-      latestStatus: json['latest_status'] as String,
+      latestStatus: json['latest_status'] as String?,
       measurements: measurements,
       standardCurves: standardCurves,
       zoneLabels: zoneLabels,

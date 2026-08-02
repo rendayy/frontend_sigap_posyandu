@@ -10,6 +10,8 @@ import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/widgets/charts/growth_chart.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 
+import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
+
 class GrowthChartPage extends StatefulWidget {
   final GrowthChartResponse? data;
   final String? idBalita;
@@ -211,11 +213,22 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
               isReconnecting: _isReconnecting,
               onTap: () => _loadData(force: true),
             ),
+          if (d.measurements.isEmpty) ...[
+            const EmptyStateWidget(
+              icon: Icons.show_chart_outlined,
+              title: 'Belum Ada Pengukuran',
+              subtitle: 'Kurva standar WHO tetap ditampilkan sebagai acuan. Data pengukuran balita akan muncul di atas kurva setelah kader melakukan penimbangan.',
+              padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+            ),
+            const SizedBox(height: 12),
+          ],
           _buildChartCard(d, ageRange),
-          const SizedBox(height: 12),
-          _buildMeasurementHistory(d),
-          const SizedBox(height: 12),
-          _buildPagination(),
+          if (d.measurements.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildMeasurementHistory(d),
+            const SizedBox(height: 12),
+            _buildPagination(),
+          ],
           const SizedBox(height: 24),
         ],
       ),
@@ -909,7 +922,8 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
     }
   }
 
-  String _statusLabel(String status) {
+  String _statusLabel(String? status) {
+    if (status == null) return 'Belum Ada Data';
     switch (status) {
       case 'gizi_baik': return 'Gizi Baik';
       case 'gizi_kurang': return 'Gizi Kurang';
@@ -919,7 +933,8 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
     }
   }
 
-  Color _statusColor(String status) {
+  Color _statusColor(String? status) {
+    if (status == null) return AppColors.textSecondary;
     switch (status) {
       case 'gizi_baik': return const Color(0xFF43A047);
       case 'gizi_kurang': return const Color(0xFFFFA726);

@@ -10,6 +10,8 @@ import 'package:frontend_posyandu/widgets/charts/gula_darah_chart.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
 
+import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
+
 class GulaDarahChartPage extends StatefulWidget {
   final GulaDarahChartData? data;
   final String? idRemaja;
@@ -202,9 +204,17 @@ class _GulaDarahChartPageState extends State<GulaDarahChartPage> {
           const SizedBox(height: 12),
           _buildChartCard(d),
           const SizedBox(height: 12),
-          _buildMeasurementHistory(d),
-          const SizedBox(height: 16),
-          _buildPagination(),
+          if (d.measurements.isEmpty)
+            const EmptyStateWidget(
+              icon: Icons.monitor_heart_outlined,
+              title: 'Belum Ada Data Pengukuran Gula Darah',
+              subtitle: 'Riwayat akan muncul setelah pemeriksaan gula darah dilakukan.',
+            )
+          else ...[
+            _buildMeasurementHistory(d),
+            const SizedBox(height: 16),
+            _buildPagination(),
+          ],
         ],
       ),
     );
@@ -273,7 +283,7 @@ class _GulaDarahChartPageState extends State<GulaDarahChartPage> {
                 Row(
                   children: [
                     Text(
-                      '${d.latestGulaDarah}',
+                      d.latestGulaDarah != null ? '${d.latestGulaDarah}' : '—',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
@@ -826,7 +836,8 @@ class _GulaDarahChartPageState extends State<GulaDarahChartPage> {
     );
   }
 
-  Color _statusColor(String status) {
+  Color _statusColor(String? status) {
+    if (status == null) return AppColors.textSecondary;
     switch (status) {
       case 'normal':
         return const Color(0xFF43A047);
@@ -839,7 +850,8 @@ class _GulaDarahChartPageState extends State<GulaDarahChartPage> {
     }
   }
 
-  String _statusLabel(String status) {
+  String _statusLabel(String? status) {
+    if (status == null) return 'Belum ada data';
     switch (status) {
       case 'normal':
         return 'Normal';

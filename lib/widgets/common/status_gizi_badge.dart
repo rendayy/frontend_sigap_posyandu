@@ -2,59 +2,90 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class StatusGiziBadge extends StatelessWidget {
-  final String status;
+  final String? status;
   final bool compact;
 
-  const StatusGiziBadge({super.key, required this.status, this.compact = false});
+  const StatusGiziBadge({super.key, this.status, this.compact = false});
 
-  String get _normalized {
-    if (status.startsWith('gizi_')) return status.substring(5);
-    return status;
-  }
+  String get _raw => status ?? 'unknown';
 
   Color get _color {
-    switch (_normalized) {
+    switch (_raw) {
       case 'baik':
+      case 'gizi_baik':
         return const Color(0xFF22C55E);
       case 'kurang':
+      case 'gizi_kurang':
         return const Color(0xFFF97316);
       case 'buruk':
+      case 'gizi_buruk':
         return const Color(0xFFEF4444);
       case 'stunting':
         return const Color(0xFFE11D48);
+      case 'berat_badan_kurang':
+        return const Color(0xFF2196F3);
+      case 'berat_badan_normal':
+        return const Color(0xFF43A047);
+      case 'berat_badan_berlebih':
+        return const Color(0xFFFFA726);
+      case 'obesitas_1':
+        return const Color(0xFFEF5350);
+      case 'obesitas_2':
+        return const Color(0xFFB71C1C);
       default:
         return const Color(0xFF94A3B8);
     }
   }
 
   Color get _bgColor {
-    switch (_normalized) {
+    switch (_raw) {
       case 'baik':
+      case 'gizi_baik':
         return const Color(0xFFF0FDF4);
       case 'kurang':
+      case 'gizi_kurang':
         return const Color(0xFFFFF7ED);
       case 'buruk':
+      case 'gizi_buruk':
         return const Color(0xFFFEF2F2);
       case 'stunting':
         return const Color(0xFFFFF1F2);
+      case 'berat_badan_kurang':
+        return const Color(0xFFE3F2FD);
+      case 'berat_badan_normal':
+        return const Color(0xFFE8F5E9);
+      case 'berat_badan_berlebih':
+        return const Color(0xFFFFF3E0);
+      case 'obesitas_1':
+      case 'obesitas_2':
+        return const Color(0xFFFFEBEE);
       default:
         return const Color(0xFFF8FAFC);
     }
   }
 
   String get _label {
-    switch (status) {
+    switch (_raw) {
       case 'baik':
       case 'gizi_baik':
         return 'Baik';
       case 'kurang':
       case 'gizi_kurang':
+      case 'berat_badan_kurang':
         return 'Kurang';
       case 'buruk':
       case 'gizi_buruk':
         return 'Buruk';
       case 'stunting':
         return 'Stunting';
+      case 'berat_badan_normal':
+        return 'Normal';
+      case 'berat_badan_berlebih':
+        return 'Berlebih';
+      case 'obesitas_1':
+        return 'Obesitas 1';
+      case 'obesitas_2':
+        return 'Obesitas 2';
       default:
         return 'Tidak Diketahui';
     }

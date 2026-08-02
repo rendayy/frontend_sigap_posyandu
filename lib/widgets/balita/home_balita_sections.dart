@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
-import 'package:frontend_posyandu/widgets/balita/status_gizi_badge.dart';
+import 'package:frontend_posyandu/widgets/common/status_gizi_badge.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
 
 class ProfileSummaryCard extends StatelessWidget {

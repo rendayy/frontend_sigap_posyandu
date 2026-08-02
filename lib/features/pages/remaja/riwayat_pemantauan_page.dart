@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend_posyandu/core/models/pagination_meta.dart';
 import 'package:frontend_posyandu/core/models/remaja/pemantauan_remaja_model.dart';
 import 'package:frontend_posyandu/core/services/remaja/pemantauan_remaja_service.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
@@ -11,6 +12,7 @@ import 'package:frontend_posyandu/features/pages/remaja/gula_darah_chart_page.da
 import 'package:frontend_posyandu/widgets/remaja/pemantauan_remaja_card.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
+import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
 
 class RiwayatPemantauanPage extends StatefulWidget {
   final bool embedded;
@@ -322,8 +324,25 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
       return _buildError();
     }
 
-    if (_loading) {
+    if (_loading && _items.isEmpty) {
       return _buildSkeletonList();
+    }
+
+    if (_items.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () => _loadData(force: true),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            SizedBox(height: 60),
+            EmptyStateWidget(
+              icon: Icons.monitor_heart_outlined,
+              title: 'Belum Ada Data Pemantauan',
+              subtitle: 'Riwayat pemantauan remaja akan muncul setelah kader melakukan pencatatan.',
+            ),
+          ],
+        ),
+      );
     }
 
     return RefreshIndicator(

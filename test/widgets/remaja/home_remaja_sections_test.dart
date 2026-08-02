@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend_posyandu/widgets/remaja/home_remaja_sections.dart';
 import 'package:frontend_posyandu/widgets/remaja/home_remaja_header.dart';
-import 'package:frontend_posyandu/widgets/remaja/status_gizi_badge.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
 
 void main() {

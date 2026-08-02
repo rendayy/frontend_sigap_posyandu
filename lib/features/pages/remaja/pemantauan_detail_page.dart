@@ -8,7 +8,7 @@ import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/core/utils/errors.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
-import 'package:frontend_posyandu/widgets/remaja/status_gizi_badge.dart';
+import 'package:frontend_posyandu/widgets/common/status_gizi_badge.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
 
