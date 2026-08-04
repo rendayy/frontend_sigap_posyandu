@@ -60,7 +60,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _loadData({bool force = false}) async {
     await loadModuleData(
       helper: _helper,
-      getModuleId: () => _authService.getModuleId(),
+      getModuleId: () async {
+        final id = await _authService.getModuleId();
+        if (id != null && id.isNotEmpty) return id;
+        final userInfo = await _authService.getUserInfo();
+        if (userInfo?.idAnggota != null && userInfo!.idAnggota.isNotEmpty) {
+          return userInfo.idAnggota;
+        }
+        return 'me';
+      },
       fetchFromApi: (_) => _citizenService.getMyProfile(),
       cacheManager: _cache,
       setState: () => setState(() {}),
@@ -150,7 +158,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

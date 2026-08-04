@@ -11,6 +11,7 @@ import 'package:frontend_posyandu/features/pages/remaja/kegiatan_detail_page.dar
 import 'package:frontend_posyandu/widgets/remaja/kegiatan_remaja_card.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
+import 'package:frontend_posyandu/widgets/common/error_state_widget.dart';
 
 class KegiatanPage extends StatefulWidget {
   final bool embedded;
@@ -115,14 +116,14 @@ class _KegiatanPageState extends State<KegiatanPage>
       if (isSessionExpired(e)) {
         await _cache.clear(_cacheKey);
         await AuthService().logout();
-        if (context.mounted) {
+        if (mounted) {
           Navigator.pushReplacementNamed(context, '/login');
         }
         return;
       }
 
       if (silent) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -146,7 +147,7 @@ class _KegiatanPageState extends State<KegiatanPage>
           _loading = false;
           _error = null;
         });
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -185,7 +186,7 @@ class _KegiatanPageState extends State<KegiatanPage>
       });
     } catch (e) {
       setState(() => _loadingMore = false);
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(friendlyError(e)),
@@ -200,7 +201,7 @@ class _KegiatanPageState extends State<KegiatanPage>
 
   @override
   Widget build(BuildContext context) {
-    updateKeepAlive();
+    super.build(context);
 
     if (widget.embedded) {
       return _buildBody();
@@ -359,37 +360,9 @@ class _KegiatanPageState extends State<KegiatanPage>
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFF94A3B8)),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Terjadi kesalahan',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: const Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _loadData(force: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.emerald,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
+    return ErrorStateWidget(
+      message: _error ?? 'Terjadi kesalahan',
+      onRetry: () => _loadData(force: true),
     );
   }
 }

@@ -1,11 +1,10 @@
-import 'package:frontend_posyandu/core/api/api_client.dart';
 import 'package:frontend_posyandu/core/models/remaja/gula_darah_chart_model.dart';
 import 'package:frontend_posyandu/core/models/remaja/pemantauan_remaja_detail_model.dart';
 import 'package:frontend_posyandu/core/models/remaja/pemantauan_remaja_model.dart';
 import 'package:frontend_posyandu/core/services/remaja/remaja_base_service.dart';
 
 class PemantauanRemajaService extends RemajaBaseService {
-  PemantauanRemajaService({ApiClient? apiClient}) : super(apiClient: apiClient);
+  PemantauanRemajaService({super.apiClient});
 
   Future<PemantauanRemajaListResponse> getList({
     required String idRemaja,

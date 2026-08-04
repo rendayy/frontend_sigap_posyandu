@@ -8,6 +8,8 @@ import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/widgets/common/status_gizi_badge.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
+import 'package:frontend_posyandu/widgets/common/error_state_widget.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 import 'package:frontend_posyandu/core/utils/errors.dart';
 
 class BalitaDetailPage extends StatefulWidget {
@@ -119,19 +121,6 @@ class _BalitaDetailPageState extends State<BalitaDetailPage> {
           _loading = false;
         });
       }
-    }
-  }
-
-  String _formatDate(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      final months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (_) {
-      return isoDate;
     }
   }
 
@@ -265,7 +254,7 @@ class _BalitaDetailPageState extends State<BalitaDetailPage> {
           Row(
             children: [
               Text(
-                _formatDate(d.tanggalPantau),
+                formatDate(d.tanggalPantau),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -473,7 +462,7 @@ class _BalitaDetailPageState extends State<BalitaDetailPage> {
           _buildInfoRow('Posyandu', d.namaPosyandu),
           if (d.updatedAt != null) ...[
             const SizedBox(height: 8),
-            _buildInfoRow('Diperbarui', _formatDate(d.updatedAt!)),
+            _buildInfoRow('Diperbarui', formatDate(d.updatedAt!)),
           ],
         ],
       ),
@@ -495,37 +484,9 @@ class _BalitaDetailPageState extends State<BalitaDetailPage> {
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFF94A3B8)),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Terjadi kesalahan',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: const Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF97316),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
+    return ErrorStateWidget(
+      message: _error ?? 'Terjadi kesalahan',
+      onRetry: _loadData,
     );
   }
 
@@ -594,7 +555,7 @@ class _BalitaDetailPageState extends State<BalitaDetailPage> {
   }
 
   static const _beratIcon = 'static/svg/ic_berat_badan.svg';
-  static const _tinggiIcon = 'static/svg/ic_lingkar_kepala.svg';
-  static const _lingkarKepalaIcon = 'static/svg/ic_tinggi_badan.svg';
+  static const _tinggiIcon = 'static/svg/ic_tinggi_badan.svg';
+  static const _lingkarKepalaIcon = 'static/svg/ic_lingkar_kepala.svg';
   static const _lingkarLenganIcon = 'static/svg/ic_lingkar_lengan.svg';
 }

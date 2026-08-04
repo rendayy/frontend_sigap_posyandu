@@ -12,7 +12,6 @@ import 'package:frontend_posyandu/core/services/balita/balita_service.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/core/utils/errors.dart';
 import 'package:frontend_posyandu/features/pages/balita/riwayat_pemantauan_page.dart';
-import 'package:frontend_posyandu/features/pages/balita/balita_detail_page.dart';
 
 class _MockAuthService extends AuthService {
   final String? stubModuleId;
@@ -69,19 +68,16 @@ class _MockPemantauanService extends PemantauanBalitaService {
 
 class _MockBalitaService extends BalitaService {
   final GrowthChartResponse? stubGrowthChartData;
-  final bool stubThrowError;
-  _MockBalitaService({this.stubGrowthChartData, this.stubThrowError = false}) : super();
+  _MockBalitaService({this.stubGrowthChartData}) : super();
 
   @override
   Future<GrowthChartResponse> getGrowthChart(String idBalita) async {
-    if (stubThrowError) throw NetworkException();
     if (stubGrowthChartData != null) return stubGrowthChartData!;
     throw Exception('not mocked');
   }
 
   @override
   Future<File> downloadKms(String idBalita) async {
-    if (stubThrowError) throw NetworkException();
     return File('${Directory.systemTemp.path}/test_kms.pdf');
   }
 }

@@ -9,7 +9,9 @@ import 'package:frontend_posyandu/core/utils/errors.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/features/pages/remaja/pemantauan_detail_page.dart';
 import 'package:frontend_posyandu/features/pages/remaja/gula_darah_chart_page.dart';
-import 'package:frontend_posyandu/widgets/remaja/pemantauan_remaja_card.dart';
+import 'package:frontend_posyandu/widgets/common/pemantauan_item_card.dart';
+import 'package:frontend_posyandu/widgets/common/error_state_widget.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
 import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
@@ -143,14 +145,14 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
       if (isSessionExpired(e)) {
         await _cache.clear(idRemaja);
         await AuthService().logout();
-        if (context.mounted) {
+        if (mounted) {
           Navigator.pushReplacementNamed(context, '/login');
         }
         return;
       }
 
       if (silent) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -174,7 +176,7 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
           _loading = false;
           _error = null;
         });
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -217,7 +219,7 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
       });
     } catch (e) {
       setState(() => _loadingMore = false);
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(friendlyError(e)),
@@ -232,7 +234,7 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
 
   @override
   Widget build(BuildContext context) {
-    updateKeepAlive();
+    super.build(context);
 
     if (widget.embedded) {
       return _buildBody();
@@ -357,25 +359,58 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
               onTap: () => _loadData(force: true),
             ),
           if (_isFromCache) const SizedBox(height: 8),
-          ..._items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: PemantauanRemajaCard(
-              item: item,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PemantauanDetailPage(
-                      idPantau: item.idPantauRemaja,
-                      idRemaja: widget.idRemaja,
-                      service: _service,
-                      authService: _authService,
-                    ),
+          ..._items.map((item) {
+            String month = '-';
+            String year = '-';
+            try {
+              final date = DateTime.parse(item.tanggalPeriksa);
+              month = [
+                'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+                'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+              ][date.month - 1];
+              year = date.year.toString();
+            } catch (_) {}
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: PemantauanItemCard(
+                date: formatDate(item.tanggalPeriksa),
+                status: item.statusGizi,
+                avatarMain: month,
+                avatarSub: year,
+                avatarFg: const Color(0xFF43A047),
+                avatarBg: const Color(0xFFE8F5E9),
+                metrics: [
+                  PemantauanMetric(
+                    iconAsset: 'static/svg/ic_berat_badan.svg',
+                    text: item.beratBadan != null ? '${item.beratBadan} kg' : '- kg',
                   ),
-                );
-              },
-            ),
-          )),
+                  PemantauanMetric(
+                    iconAsset: 'static/svg/ic_tinggi_badan.svg',
+                    text: item.tinggiBadan != null ? '${item.tinggiBadan} cm' : '- cm',
+                  ),
+                  if (item.gulaDarah != null)
+                    PemantauanMetric(
+                      iconAsset: 'static/svg/ic_gula_darah.svg',
+                      text: '${item.gulaDarah} mg/dl',
+                    ),
+                ],
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PemantauanDetailPage(
+                        idPantau: item.idPantauRemaja,
+                        idRemaja: widget.idRemaja,
+                        service: _service,
+                        authService: _authService,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
           if (_pagination != null && _pagination!.hasMore)
             _buildLoadMoreButton(),
         ],
@@ -482,37 +517,9 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFF94A3B8)),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Terjadi kesalahan',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: const Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _loadData(force: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.emerald,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
+    return ErrorStateWidget(
+      message: _error ?? 'Terjadi kesalahan',
+      onRetry: () => _loadData(force: true),
     );
   }
 }

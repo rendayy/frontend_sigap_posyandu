@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/core/utils/errors.dart';
+import 'package:frontend_posyandu/widgets/common/error_state_widget.dart';
 
 class ModulePageHelper<T> {
   T? data;
@@ -128,27 +129,8 @@ Future<void> loadModuleData<T>({
 }
 
 Widget buildModuleError(String message, VoidCallback onRetry) {
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Color(0xFFFF2B4E)),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Coba Lagi'),
-          ),
-        ],
-      ),
-    ),
+  return ErrorStateWidget(
+    message: message,
+    onRetry: onRetry,
   );
 }

@@ -9,7 +9,9 @@ import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/features/pages/balita/balita_detail_page.dart';
 import 'package:frontend_posyandu/features/pages/balita/growth_chart_page.dart';
-import 'package:frontend_posyandu/widgets/balita/pemantauan_card.dart';
+import 'package:frontend_posyandu/widgets/common/pemantauan_item_card.dart';
+import 'package:frontend_posyandu/widgets/common/error_state_widget.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 import 'package:frontend_posyandu/widgets/balita/home_bottom_nav.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
@@ -229,7 +231,8 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
 
   @override
   Widget build(BuildContext context) {
-    updateKeepAlive();
+    super.build(context);
+
     if (widget.embedded) {
       return Column(
         children: [
@@ -377,8 +380,29 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
           else ...[
             ..._items.map((item) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: PemantauanCard(
-                item: item,
+              child: PemantauanItemCard(
+                date: formatDate(item.tanggalPantau),
+                status: item.statusGizi,
+                avatarMain: '${item.usiaBulan}',
+                avatarSub: 'bln',
+                avatarFg: const Color(0xFFF97316),
+                avatarBg: const Color(0xFFFFF7ED),
+                metrics: [
+                  PemantauanMetric(
+                    iconAsset: 'static/svg/ic_berat_badan.svg',
+                    text: '${item.berat.toStringAsFixed(1)} kg',
+                  ),
+                  PemantauanMetric(
+                    iconAsset: 'static/svg/ic_tinggi_badan.svg',
+                    text: '${item.tinggi.toStringAsFixed(1)} cm',
+                  ),
+                  PemantauanMetric(
+                    iconAsset: 'static/svg/ic_lingkar_kepala.svg',
+                    text: item.lingkarKepala != null
+                        ? '${item.lingkarKepala!.toStringAsFixed(1)} cm'
+                        : '- cm',
+                  ),
+                ],
                 onTap: () => _onTapCard(item),
               ),
             )),
@@ -390,51 +414,10 @@ class _RiwayatPemantauanPageState extends State<RiwayatPemantauanPage>
     );
   }
 
-  Widget _buildPlaceholder(String title) {
-    return Center(
-      child: Text(
-        title,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: const Color(0xFF94A3B8),
-        ),
-      ),
-    );
-  }
-
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFF94A3B8)),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Terjadi kesalahan',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: const Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF97316),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
+    return ErrorStateWidget(
+      message: _error ?? 'Terjadi kesalahan',
+      onRetry: _loadData,
     );
   }
 

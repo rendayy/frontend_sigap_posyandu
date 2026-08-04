@@ -8,13 +8,16 @@ import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
 import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/core/utils/module_page_mixin.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
-import 'package:frontend_posyandu/widgets/remaja/home_remaja_header.dart';
 import 'package:frontend_posyandu/features/pages/remaja/riwayat_pemantauan_page.dart';
+import 'package:frontend_posyandu/widgets/common/home_sections.dart';
 import 'package:frontend_posyandu/widgets/remaja/home_remaja_sections.dart';
-import 'package:frontend_posyandu/widgets/remaja/home_bottom_nav_remaja.dart';
+import 'package:frontend_posyandu/widgets/balita/home_bottom_nav.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
+import 'package:frontend_posyandu/widgets/common/status_gizi_badge.dart';
 import 'package:frontend_posyandu/features/pages/remaja/kegiatan_page.dart';
 import 'package:frontend_posyandu/features/pages/profil/profile_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class RemajaPage extends StatefulWidget {
   final RemajaService? remajaService;
@@ -118,7 +121,17 @@ class _RemajaPageState extends State<RemajaPage> {
           Expanded(
             child: SafeArea(top: false, bottom: false, child: _buildBody()),
           ),
-          HomeBottomNavRemaja(currentIndex: _bottomNavIndex, onTap: _onNavTap),
+          HomeBottomNav(
+            currentIndex: _bottomNavIndex,
+            onTap: _onNavTap,
+            activeColor: AppColors.emerald,
+            items: const [
+              NavItem(label: 'Beranda', icon: Icons.home_outlined, activeIcon: Icons.home),
+              NavItem(label: 'Riwayat', icon: Icons.history_outlined, activeIcon: Icons.history),
+              NavItem(label: 'Kegiatan', icon: Icons.event_outlined, activeIcon: Icons.event),
+              NavItem(label: 'Profil', icon: Icons.person_outline, activeIcon: Icons.person),
+            ],
+          ),
         ],
       ),
     );
@@ -161,33 +174,15 @@ class _RemajaPageState extends State<RemajaPage> {
     return _buildContentWithSkeleton(d);
   }
 
-  String _formatDate(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      final months = [
-        'Januari',
-        'Februari',
-        'Maret',
-        'April',
-        'Mei',
-        'Juni',
-        'Juli',
-        'Agustus',
-        'September',
-        'Oktober',
-        'November',
-        'Desember',
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (_) {
-      return isoDate;
-    }
-  }
-
   Widget _buildContentWithSkeleton(RemajaDetailResponse? d) {
     final showSkeleton = _helper.showSkeleton;
     final nama = d?.nama ?? '';
     final initials = nama.isNotEmpty ? nama[0].toUpperCase() : '?';
+
+    final bmiValue = _bmiData?.bmi?.toStringAsFixed(1) ?? '-';
+    final lastCheckupDate = d?.updatedAt != null
+        ? formatDate(d!.updatedAt!)
+        : '-';
 
     return RefreshIndicator(
       onRefresh: () => _loadData(force: true),
@@ -204,16 +199,42 @@ class _RemajaPageState extends State<RemajaPage> {
             GreetingSection(
               name: nama,
               initials: initials,
-              moduleName: 'Remaja',
               isLoading: showSkeleton,
+              moduleBadge: 'Remaja',
+              badgeColor: AppColors.emerald,
+              badgeBgColor: AppColors.greenLight,
+              avatarGradient: const [AppColors.emerald, Color(0xFF26A69A)],
             ),
             const SizedBox(height: 16),
             // Section 2: BMI Card
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ProfileSummaryCard(
-                bmi: _bmiData?.bmi,
-                statusGizi: _bmiData?.statusGizi ?? d?.statusGizi,
+                label: 'Indeks Massa Tubuh (BMI)',
+                heroValue: bmiValue,
+                heroUnit: 'kg/m²',
+                icon: Icons.monitor_heart,
+                gradient: const [
+                  Color(0xFF43A047),
+                  Color(0xFF2E9E5B),
+                  Color(0xFF26A69A),
+                ],
+                labelColor: const Color(0xFFE8F5E9),
+                statusRow: Row(
+                  children: [
+                    Text(
+                      'Status: ',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFFE8F5E9),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    StatusGiziBadge(status: _bmiData?.statusGizi ?? d?.statusGizi, compact: true),
+                  ],
+                ),
+                footerValue: lastCheckupDate,
                 isLoading: showSkeleton,
               ),
             ),
@@ -222,13 +243,29 @@ class _RemajaPageState extends State<RemajaPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: QuickStatsGrid(
-                usia: d?.usia ?? 0,
-                tinggiBadan: d != null && d.tinggiBadan != null
-                    ? d.tinggiBadan!.toStringAsFixed(1)
-                    : '-',
-                beratBadan: d != null && d.beratBadan != null
-                    ? d.beratBadan!.toStringAsFixed(1)
-                    : '-',
+                items: [
+                  QuickStatItem(
+                    label: 'Usia',
+                    value: d != null ? '${d.usia}' : '0',
+                    unit: 'Tahun',
+                    icon: Icons.cake_outlined,
+                    iconColor: const Color(0xFF0EA5E9),
+                  ),
+                  QuickStatItem(
+                    label: 'Tinggi',
+                    value: d != null && d.tinggiBadan != null ? d.tinggiBadan!.toStringAsFixed(1) : '-',
+                    unit: 'cm',
+                    icon: Icons.height,
+                    iconColor: const Color(0xFFAD46FF),
+                  ),
+                  QuickStatItem(
+                    label: 'Berat',
+                    value: d != null && d.beratBadan != null ? d.beratBadan!.toStringAsFixed(1) : '-',
+                    unit: 'kg',
+                    icon: Icons.monitor_weight_outlined,
+                    iconColor: const Color(0xFFFF2B4E),
+                  ),
+                ],
                 isLoading: showSkeleton,
               ),
             ),
@@ -267,14 +304,6 @@ class _RemajaPageState extends State<RemajaPage> {
                   );
                 },
               ),
-            ),
-            const SizedBox(height: 16),
-            // Section 5: Footer
-            FooterSection(
-              lastCheckupDate: d?.updatedAt != null
-                  ? _formatDate(d!.updatedAt!)
-                  : '-',
-              isLoading: showSkeleton,
             ),
             const SizedBox(height: 24),
           ],

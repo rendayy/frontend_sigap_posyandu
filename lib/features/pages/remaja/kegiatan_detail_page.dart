@@ -8,6 +8,8 @@ import 'package:frontend_posyandu/core/utils/errors.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
+import 'package:frontend_posyandu/widgets/common/error_state_widget.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 
 class KegiatanDetailPage extends StatefulWidget {
   final String idKegiatan;
@@ -121,18 +123,6 @@ class _KegiatanDetailPageState extends State<KegiatanDetailPage>
   String _getStatusLabel(String key) => _statusLabels[key] ?? key;
   IconData _getJenisIcon(String key) => _jenisIcons[key] ?? Icons.event;
 
-  String _formatDate(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      final months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (_) {
-      return isoDate;
-    }
-  }
 
   String _formatTime(String time) {
     try {
@@ -171,14 +161,14 @@ class _KegiatanDetailPageState extends State<KegiatanDetailPage>
       if (isSessionExpired(e)) {
         await _cache.clear(widget.idKegiatan);
         await _authService.logout();
-        if (context.mounted) {
+        if (mounted) {
           Navigator.pushReplacementNamed(context, '/login');
         }
         return;
       }
 
       if (silent) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -201,7 +191,7 @@ class _KegiatanDetailPageState extends State<KegiatanDetailPage>
           _loading = false;
           _error = null;
         });
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -335,7 +325,7 @@ class _KegiatanDetailPageState extends State<KegiatanDetailPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${_formatDate(d.tanggal)} • ${_formatTime(d.waktu)}',
+                  '${formatDate(d.tanggal)} • ${_formatTime(d.waktu)}',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -578,37 +568,9 @@ class _KegiatanDetailPageState extends State<KegiatanDetailPage>
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFF94A3B8)),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Terjadi kesalahan',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: const Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _loadData(force: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.orange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
+    return ErrorStateWidget(
+      message: _error ?? 'Terjadi kesalahan',
+      onRetry: () => _loadData(force: true),
     );
   }
 

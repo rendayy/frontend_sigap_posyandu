@@ -11,6 +11,8 @@ import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/widgets/common/status_gizi_badge.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
+import 'package:frontend_posyandu/widgets/common/error_state_widget.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 
 class PemantauanDetailPage extends StatefulWidget {
   final String idPantau;
@@ -214,14 +216,14 @@ class _PemantauanDetailPageState extends State<PemantauanDetailPage>
           await _cache.clear('${idRemaja}_${widget.idPantau}');
         }
         await _authService.logout();
-        if (context.mounted) {
+        if (mounted) {
           Navigator.pushReplacementNamed(context, '/login');
         }
         return;
       }
 
       if (isSilent) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -245,7 +247,7 @@ class _PemantauanDetailPageState extends State<PemantauanDetailPage>
           _loading = false;
           _error = null;
         });
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -265,31 +267,7 @@ class _PemantauanDetailPageState extends State<PemantauanDetailPage>
     }
   }
 
-  String _formatDate(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (_) {
-      return isoDate;
-    }
-  }
 
-  String _formatDateLong(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      final months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (_) {
-      return isoDate;
-    }
-  }
 
   String _formatNum(dynamic value, {int digits = 1}) {
     if (value == null) return '-';
@@ -378,7 +356,7 @@ class _PemantauanDetailPageState extends State<PemantauanDetailPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Pemantauan ${_formatDate(_data!.tanggalPeriksa)}',
+                  'Pemantauan ${formatDate(_data!.tanggalPeriksa, short: true)}',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -458,7 +436,7 @@ class _PemantauanDetailPageState extends State<PemantauanDetailPage>
                 ),
                 const Spacer(),
                 Text(
-                  _formatDate(d.tanggalPeriksa),
+                  formatDate(d.tanggalPeriksa),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -886,37 +864,9 @@ class _PemantauanDetailPageState extends State<PemantauanDetailPage>
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFF94A3B8)),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Terjadi kesalahan',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: const Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _loadData(force: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.emerald,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
+    return ErrorStateWidget(
+      message: _error ?? 'Terjadi kesalahan',
+      onRetry: () => _loadData(force: true),
     );
   }
 

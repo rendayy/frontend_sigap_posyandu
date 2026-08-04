@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'package:frontend_posyandu/config.dart';
-import 'package:frontend_posyandu/core/api/api_client.dart';
 import 'package:frontend_posyandu/core/models/balita/balita_model.dart';
 import 'package:frontend_posyandu/core/models/balita/growth_chart_model.dart';
 import 'package:frontend_posyandu/core/services/balita/balita_base_service.dart';
 
 class BalitaService extends BalitaBaseService {
-  BalitaService({ApiClient? apiClient}) : super(apiClient: apiClient);
+  BalitaService({super.apiClient});
 
   Future<BalitaDetailResponse> getBalitaById(String idBalita) {
     return get(

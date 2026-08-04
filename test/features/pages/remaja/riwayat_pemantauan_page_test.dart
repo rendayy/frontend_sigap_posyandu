@@ -107,7 +107,7 @@ void main() {
 
       expect(find.text('Pemantauan'), findsOneWidget);
       expect(find.text('Gula Darah'), findsOneWidget);
-      expect(find.text('18 Jul 2026'), findsNWidgets(5));
+      expect(find.text('18 Juli 2026'), findsNWidgets(5));
       await tester.scrollUntilVisible(find.text('Muat Lainnya'), 100);
       expect(find.text('Muat Lainnya'), findsOneWidget);
     });
@@ -149,7 +149,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('18 Jul 2026'), findsOneWidget);
+      expect(find.text('18 Juli 2026'), findsOneWidget);
       expect(find.text('Menampilkan data tersimpan'), findsOneWidget);
       expect(find.text('Hubungkan'), findsOneWidget);
     });

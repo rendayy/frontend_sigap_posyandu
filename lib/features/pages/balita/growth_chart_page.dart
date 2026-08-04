@@ -38,7 +38,7 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
   GrowthChartResponse? _data;
   bool _loading = false;
   bool _isFromCache = false;
-  bool _isReconnecting = false;
+  final bool _isReconnecting = false;
   bool _isDownloading = false;
   String? _error;
   DateTime? _lastFetchTime;
@@ -84,13 +84,6 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
       _loadData();
     }
     super.initState();
-  }
-
-  void _silentRefreshIfStale() {
-    if (_data == null) return;
-    if (_lastFetchTime == null) return;
-    if (DateTime.now().difference(_lastFetchTime!) < _staleAfter) return;
-    _loadData(silent: true);
   }
 
   Future<void> _loadData({bool force = false, bool silent = false}) async {
@@ -258,61 +251,6 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
     );
   }
 
-  Widget _buildStatusSummary(GrowthChartResponse d) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  _statusLabel(d.latestStatus),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: _statusColor(d.latestStatus),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${d.measurements.length}x pengukuran',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${_chartTypeLabel(d.chartType)} — ${d.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan'}',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            if (d.standardSource.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                d.standardSource,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _downloadKms() async {
     final idBalita = widget.idBalita ?? await _authService.getModuleId();
     if (idBalita == null || idBalita.isEmpty) return;
@@ -326,8 +264,9 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
         SnackBar(content: Text('Gagal membuka file KMS')),
       );
     } finally {
-      if (!mounted) return;
-      setState(() => _isDownloading = false);
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
     }
   }
 
@@ -441,80 +380,6 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildZoneDescription(GrowthChartResponse d) {
-    final statusLabel = _statusLabel(d.latestStatus);
-    final zoneLabel = d.zoneLabels['-2SD'] ?? 'Gizi Kurang';
-    final zoneLabelUpper = d.zoneLabels['+2SD'] ?? 'Kelebihan Berat Badan';
-    final gender = d.jenisKelamin == 'L' ? 'laki-laki' : 'perempuan';
-    final chartLabel = _chartTypeLabel(d.chartType);
-
-    String description;
-    switch (d.latestStatus) {
-      case 'gizi_baik':
-        description = 'berada dalam zona normal WHO (antara -2SD dan +2SD)';
-        break;
-      case 'gizi_kurang':
-        description = 'berada di bawah -2SD (zona $zoneLabel)';
-        break;
-      case 'gizi_buruk':
-        description = 'berada di bawah -3SD (zona $zoneLabel)';
-        break;
-      case 'stunting':
-        description = 'berada di bawah standar tinggi badan (zona $zoneLabel)';
-        break;
-      default:
-        description = 'berada dalam zona $zoneLabel';
-    }
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 4,
-              height: 48,
-              decoration: BoxDecoration(
-                color: _statusColor(d.latestStatus),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Status: $statusLabel',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: _statusColor(d.latestStatus),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$chartLabel $gender $description.',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -919,48 +784,6 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
       case 'TB/U': return 'Tinggi Badan';
       case 'BB/TB': return 'Berat Badan / Tinggi Badan';
       default: return type;
-    }
-  }
-
-  String _statusLabel(String? status) {
-    if (status == null) return 'Belum Ada Data';
-    switch (status) {
-      case 'gizi_baik': return 'Gizi Baik';
-      case 'gizi_kurang': return 'Gizi Kurang';
-      case 'gizi_buruk': return 'Gizi Buruk';
-      case 'stunting': return 'Stunting';
-      default: return status;
-    }
-  }
-
-  Color _statusColor(String? status) {
-    if (status == null) return AppColors.textSecondary;
-    switch (status) {
-      case 'gizi_baik': return const Color(0xFF43A047);
-      case 'gizi_kurang': return const Color(0xFFFFA726);
-      case 'gizi_buruk': return const Color(0xFFEF5350);
-      case 'stunting': return const Color(0xFFB71C1C);
-      default: return AppColors.textSecondary;
-    }
-  }
-
-  Color _measurementStatusColor(String status) {
-    switch (status) {
-      case 'gizi_baik': return const Color(0xFF43A047);
-      case 'gizi_kurang': return const Color(0xFFFFA726);
-      case 'gizi_buruk': return const Color(0xFFEF5350);
-      case 'stunting': return const Color(0xFFB71C1C);
-      default: return AppColors.textSecondary;
-    }
-  }
-
-  String _measurementStatusLabel(String status) {
-    switch (status) {
-      case 'gizi_baik': return 'Baik';
-      case 'gizi_kurang': return 'Kurang';
-      case 'gizi_buruk': return 'Buruk';
-      case 'stunting': return 'Stunting';
-      default: return status;
     }
   }
 

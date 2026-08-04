@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/core/models/remaja/kegiatan_remaja_model.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 
 class KegiatanRemajaCard extends StatelessWidget {
   final KegiatanRemajaItem item;
@@ -105,18 +106,6 @@ class KegiatanRemajaCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      final months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (_) {
-      return isoDate;
-    }
-  }
 
   String _formatTime(String time) {
     try {
@@ -173,7 +162,7 @@ class KegiatanRemajaCard extends StatelessWidget {
         Icon(Icons.calendar_today_outlined, size: 12, color: const Color(0xFF94A3B8)),
         const SizedBox(width: 4),
         Text(
-          _formatDate(item.tanggal),
+          formatDate(item.tanggal),
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             fontWeight: FontWeight.w500,

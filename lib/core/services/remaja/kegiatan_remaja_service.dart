@@ -1,10 +1,9 @@
-import 'package:frontend_posyandu/core/api/api_client.dart';
 import 'package:frontend_posyandu/core/models/remaja/kegiatan_detail_model.dart';
 import 'package:frontend_posyandu/core/models/remaja/kegiatan_remaja_model.dart';
 import 'package:frontend_posyandu/core/services/remaja/remaja_base_service.dart';
 
 class KegiatanRemajaService extends RemajaBaseService {
-  KegiatanRemajaService({ApiClient? apiClient}) : super(apiClient: apiClient);
+  KegiatanRemajaService({super.apiClient});
 
   Future<KegiatanRemajaListResponse> getList({int page = 1, int limit = 10}) {
     return get(

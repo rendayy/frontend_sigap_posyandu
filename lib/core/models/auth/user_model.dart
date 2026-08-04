@@ -24,6 +24,7 @@ enum UserCategory {
   }
 
   static UserCategory? fromString(String value) {
+    if (value == 'umum') return UserCategory.posbindu;
     for (final c in UserCategory.values) {
       if (c.name == value || c.label == value) return c;
     }
@@ -49,13 +50,19 @@ class UserInfo {
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
+    final idAnggota = json['id_anggota'] as String? ?? '';
+    final rawModuleId = json['module_id'] as String?;
+    final moduleId = (rawModuleId != null && rawModuleId.isNotEmpty)
+        ? rawModuleId
+        : idAnggota;
+
     return UserInfo(
-      idAnggota: json['id_anggota'] as String,
-      kategoriAnggota: json['kategori_anggota'] as String,
-      moduleId: json['module_id'] as String,
-      moduleType: json['module_type'] as String,
-      nama: json['nama'] as String,
-      userType: json['user_type'] as String,
+      idAnggota: idAnggota,
+      kategoriAnggota: json['kategori_anggota'] as String? ?? '',
+      moduleId: moduleId,
+      moduleType: json['module_type'] as String? ?? '',
+      nama: json['nama'] as String? ?? '',
+      userType: json['user_type'] as String? ?? '',
     );
   }
 
@@ -95,12 +102,12 @@ class LoginResponse {
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>;
     return LoginResponse(
-      accessToken: data['access_token'] as String,
-      expiresIn: data['expires_in'] as int,
-      refreshToken: data['refresh_token'] as String,
-      roles: List<String>.from(data['roles'] as List),
-      state: data['state'] as String,
-      tokenType: data['token_type'] as String,
+      accessToken: data['access_token'] as String? ?? '',
+      expiresIn: data['expires_in'] as int? ?? 0,
+      refreshToken: data['refresh_token'] as String? ?? '',
+      roles: data['roles'] != null ? List<String>.from(data['roles'] as List) : [],
+      state: data['state'] as String? ?? '',
+      tokenType: data['token_type'] as String? ?? 'Bearer',
       message: json['message'] as String? ?? '',
       user: data['user'] != null
           ? UserInfo.fromJson(data['user'] as Map<String, dynamic>)

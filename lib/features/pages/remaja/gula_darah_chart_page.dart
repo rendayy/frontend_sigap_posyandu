@@ -36,7 +36,7 @@ class _GulaDarahChartPageState extends State<GulaDarahChartPage> {
   GulaDarahChartData? _data;
   bool _loading = false;
   bool _isFromCache = false;
-  bool _isReconnecting = false;
+  final bool _isReconnecting = false;
   String? _error;
   DateTime? _lastFetchTime;
   static const _staleAfter = Duration(seconds: 30);
@@ -76,13 +76,6 @@ class _GulaDarahChartPageState extends State<GulaDarahChartPage> {
     } else {
       _loadData();
     }
-  }
-
-  void _silentRefreshIfStale() {
-    if (_data == null) return;
-    if (_lastFetchTime == null) return;
-    if (DateTime.now().difference(_lastFetchTime!) < _staleAfter) return;
-    _loadData(silent: true);
   }
 
   Future<void> _loadData({bool force = false, bool silent = false}) async {

@@ -1,10 +1,9 @@
-import 'package:frontend_posyandu/core/api/api_client.dart';
 import 'package:frontend_posyandu/core/models/balita/pemantauan_balita_detail_model.dart';
 import 'package:frontend_posyandu/core/models/balita/pemantauan_balita_model.dart';
 import 'package:frontend_posyandu/core/services/balita/balita_base_service.dart';
 
 class PemantauanBalitaService extends BalitaBaseService {
-  PemantauanBalitaService({ApiClient? apiClient}) : super(apiClient: apiClient);
+  PemantauanBalitaService({super.apiClient});
 
   Future<PemantauanListResponse> getList({
     required String idBalita,
