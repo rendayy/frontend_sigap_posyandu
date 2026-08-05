@@ -10,6 +10,8 @@ import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/widgets/charts/growth_chart.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
 
+import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
+
 class GrowthChartPage extends StatefulWidget {
   final GrowthChartResponse? data;
   final String? idBalita;
@@ -36,11 +38,25 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
   GrowthChartResponse? _data;
   bool _loading = false;
   bool _isFromCache = false;
-  bool _isReconnecting = false;
+  final bool _isReconnecting = false;
   bool _isDownloading = false;
   String? _error;
   DateTime? _lastFetchTime;
   static const _staleAfter = Duration(seconds: 30);
+
+  int _currentPage = 1;
+  static const _limit = 5;
+
+  int get _totalPages {
+    final total = _data?.measurements.length ?? 0;
+    if (total == 0) return 1;
+    return (total / _limit).ceil();
+  }
+
+  List<GrowthMeasurement> get _currentMeasurements {
+    final all = _data?.measurements ?? [];
+    return all.reversed.skip((_currentPage - 1) * _limit).take(_limit).toList();
+  }
 
   late final BalitaService _balitaService;
   late final AuthService _authService;
@@ -68,13 +84,6 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
       _loadData();
     }
     super.initState();
-  }
-
-  void _silentRefreshIfStale() {
-    if (_data == null) return;
-    if (_lastFetchTime == null) return;
-    if (DateTime.now().difference(_lastFetchTime!) < _staleAfter) return;
-    _loadData(silent: true);
   }
 
   Future<void> _loadData({bool force = false, bool silent = false}) async {
@@ -197,9 +206,22 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
               isReconnecting: _isReconnecting,
               onTap: () => _loadData(force: true),
             ),
+          if (d.measurements.isEmpty) ...[
+            const EmptyStateWidget(
+              icon: Icons.show_chart_outlined,
+              title: 'Belum Ada Pengukuran',
+              subtitle: 'Kurva standar WHO tetap ditampilkan sebagai acuan. Data pengukuran balita akan muncul di atas kurva setelah kader melakukan penimbangan.',
+              padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+            ),
+            const SizedBox(height: 12),
+          ],
           _buildChartCard(d, ageRange),
-          const SizedBox(height: 12),
-          _buildMeasurementHistory(d),
+          if (d.measurements.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildMeasurementHistory(d),
+            const SizedBox(height: 12),
+            _buildPagination(),
+          ],
           const SizedBox(height: 24),
         ],
       ),
@@ -229,61 +251,6 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
     );
   }
 
-  Widget _buildStatusSummary(GrowthChartResponse d) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  _statusLabel(d.latestStatus),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: _statusColor(d.latestStatus),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${d.measurements.length}x pengukuran',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${_chartTypeLabel(d.chartType)} — ${d.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan'}',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            if (d.standardSource.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                d.standardSource,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _downloadKms() async {
     final idBalita = widget.idBalita ?? await _authService.getModuleId();
     if (idBalita == null || idBalita.isEmpty) return;
@@ -297,8 +264,9 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
         SnackBar(content: Text('Gagal membuka file KMS')),
       );
     } finally {
-      if (!mounted) return;
-      setState(() => _isDownloading = false);
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
     }
   }
 
@@ -416,154 +384,162 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
     );
   }
 
-  Widget _buildZoneDescription(GrowthChartResponse d) {
-    final statusLabel = _statusLabel(d.latestStatus);
-    final zoneLabel = d.zoneLabels['-2SD'] ?? 'Gizi Kurang';
-    final zoneLabelUpper = d.zoneLabels['+2SD'] ?? 'Kelebihan Berat Badan';
-    final gender = d.jenisKelamin == 'L' ? 'laki-laki' : 'perempuan';
-    final chartLabel = _chartTypeLabel(d.chartType);
-
-    String description;
-    switch (d.latestStatus) {
-      case 'gizi_baik':
-        description = 'berada dalam zona normal WHO (antara -2SD dan +2SD)';
-        break;
-      case 'gizi_kurang':
-        description = 'berada di bawah -2SD (zona $zoneLabel)';
-        break;
-      case 'gizi_buruk':
-        description = 'berada di bawah -3SD (zona $zoneLabel)';
-        break;
-      case 'stunting':
-        description = 'berada di bawah standar tinggi badan (zona $zoneLabel)';
-        break;
-      default:
-        description = 'berada dalam zona $zoneLabel';
+  Widget _buildMeasurementHistory(GrowthChartResponse d) {
+    final items = _currentMeasurements;
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
     }
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 4,
-              height: 48,
-              decoration: BoxDecoration(
-                color: _statusColor(d.latestStatus),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Status: $statusLabel',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: _statusColor(d.latestStatus),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$chartLabel $gender $description.',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMeasurementHistory(GrowthChartResponse d) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0x14000000)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0D000000), blurRadius: 2, offset: Offset(0, 1)),
-          BoxShadow(color: Color(0x0D000000), blurRadius: 3, offset: Offset(0, 1)),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Riwayat Pengukuran',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...d.measurements.reversed.map(
-              (m) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: _measurementStatusColor(m.statusGizi),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Usia ${m.usiaBulan} bulan',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '${_formatDate(m.tanggalPantau)} — ${m.berat} kg',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Text(
-                      _measurementStatusLabel(m.statusGizi),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: _measurementStatusColor(m.statusGizi),
-                      ),
-                    ),
-                  ],
+          Row(
+            children: [
+              Icon(Icons.history, size: 18, color: AppColors.textPrimary),
+              const SizedBox(width: 8),
+              Text(
+                'Riwayat Pengukuran',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...items.map(
+            (m) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.monitor_weight_outlined,
+                          size: 20,
+                          color: AppColors.orange,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Usia ${m.usiaBulan} bulan',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatDate(m.tanggalPantau),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${m.berat}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.orange,
+                            ),
+                          ),
+                          Text(
+                            'kg',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPagination() {
+    final total = _totalPages;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (_currentPage > 1)
+          TextButton(
+            onPressed: () => setState(() => _currentPage--),
+            child: Text(
+              'Sebelumnya',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFF97316),
+              ),
             ),
-          ],
+          ),
+        const SizedBox(width: 16),
+        Text(
+          '$_currentPage / $total',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
-      );
+        const SizedBox(width: 16),
+        if (_currentPage < total)
+          TextButton(
+            onPressed: () => setState(() => _currentPage++),
+            child: Text(
+              'Selanjutnya',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFF97316),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildError() {
@@ -808,46 +784,6 @@ class _GrowthChartPageState extends State<GrowthChartPage> {
       case 'TB/U': return 'Tinggi Badan';
       case 'BB/TB': return 'Berat Badan / Tinggi Badan';
       default: return type;
-    }
-  }
-
-  String _statusLabel(String status) {
-    switch (status) {
-      case 'gizi_baik': return 'Gizi Baik';
-      case 'gizi_kurang': return 'Gizi Kurang';
-      case 'gizi_buruk': return 'Gizi Buruk';
-      case 'stunting': return 'Stunting';
-      default: return status;
-    }
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'gizi_baik': return const Color(0xFF43A047);
-      case 'gizi_kurang': return const Color(0xFFFFA726);
-      case 'gizi_buruk': return const Color(0xFFEF5350);
-      case 'stunting': return const Color(0xFFB71C1C);
-      default: return AppColors.textSecondary;
-    }
-  }
-
-  Color _measurementStatusColor(String status) {
-    switch (status) {
-      case 'gizi_baik': return const Color(0xFF43A047);
-      case 'gizi_kurang': return const Color(0xFFFFA726);
-      case 'gizi_buruk': return const Color(0xFFEF5350);
-      case 'stunting': return const Color(0xFFB71C1C);
-      default: return AppColors.textSecondary;
-    }
-  }
-
-  String _measurementStatusLabel(String status) {
-    switch (status) {
-      case 'gizi_baik': return 'Baik';
-      case 'gizi_kurang': return 'Kurang';
-      case 'gizi_buruk': return 'Buruk';
-      case 'stunting': return 'Stunting';
-      default: return status;
     }
   }
 

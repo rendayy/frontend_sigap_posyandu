@@ -2,22 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
 
+class NavItem {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+
+  const NavItem({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
+}
+
 class HomeBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final Color? activeColor;
+  final List<NavItem>? items;
 
   const HomeBottomNav({
     super.key,
     this.currentIndex = 0,
     required this.onTap,
+    this.activeColor,
+    this.items,
   });
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      _NavItem(label: 'Beranda', icon: Icons.home_outlined, activeIcon: Icons.home),
-      _NavItem(label: 'Riwayat', icon: Icons.history_outlined, activeIcon: Icons.history),
-      _NavItem(label: 'Profil', icon: Icons.person_outline, activeIcon: Icons.person),
+    final effectiveActiveColor = activeColor ?? AppColors.orange;
+    final navItems = items ?? const [
+      NavItem(label: 'Beranda', icon: Icons.home_outlined, activeIcon: Icons.home),
+      NavItem(label: 'Riwayat', icon: Icons.history_outlined, activeIcon: Icons.history),
+      NavItem(label: 'Profil', icon: Icons.person_outline, activeIcon: Icons.person),
     ];
 
     return Container(
@@ -29,8 +46,8 @@ class HomeBottomNav extends StatelessWidget {
         ),
       ),
       child: Row(
-        children: List.generate(items.length, (i) {
-          final item = items[i];
+        children: List.generate(navItems.length, (i) {
+          final item = navItems[i];
           final isActive = i == currentIndex;
           return Expanded(
             child: GestureDetector(
@@ -46,7 +63,7 @@ class HomeBottomNav extends StatelessWidget {
                       child: Icon(
                         isActive ? item.activeIcon : item.icon,
                         size: 20,
-                        color: isActive ? AppColors.primary : AppColors.textSecondary,
+                        color: isActive ? effectiveActiveColor : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -55,7 +72,7 @@ class HomeBottomNav extends StatelessWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: isActive ? AppColors.primary : AppColors.textSecondary,
+                        color: isActive ? effectiveActiveColor : AppColors.textSecondary,
                         height: 1.5,
                       ),
                     ),
@@ -65,7 +82,7 @@ class HomeBottomNav extends StatelessWidget {
                         height: 2,
                         margin: const EdgeInsets.only(top: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: effectiveActiveColor,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -78,16 +95,4 @@ class HomeBottomNav extends StatelessWidget {
       ),
     );
   }
-}
-
-class _NavItem {
-  final String label;
-  final IconData icon;
-  final IconData activeIcon;
-
-  const _NavItem({
-    required this.label,
-    required this.icon,
-    required this.activeIcon,
-  });
 }

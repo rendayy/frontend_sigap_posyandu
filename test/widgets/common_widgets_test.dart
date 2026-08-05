@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend_posyandu/widgets/common/primary_button.dart';
 import 'package:frontend_posyandu/widgets/common/skeleton_widget.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
-import 'package:frontend_posyandu/widgets/balita/status_gizi_badge.dart';
+import 'package:frontend_posyandu/widgets/common/status_gizi_badge.dart';
 
 void main() {
   group('PrimaryButton', () {

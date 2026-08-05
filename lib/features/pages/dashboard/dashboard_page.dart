@@ -83,7 +83,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _logout() async {
-    await FCMService().clearFcmToken();
     await AuthService().logout();
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, '/login');

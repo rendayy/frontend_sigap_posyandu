@@ -70,7 +70,7 @@ void main() {
       await tester.scrollUntilVisible(find.text('Riwayat Pengukuran'), 200);
       expect(find.text('Riwayat Pengukuran'), findsOneWidget);
       expect(find.text('Usia 5 bulan'), findsOneWidget);
-      expect(find.textContaining('12.8 kg'), findsOneWidget);
+      expect(find.text('12.8'), findsOneWidget);
     });
 
     testWidgets('shows skeleton then data when loaded from service', (tester) async {

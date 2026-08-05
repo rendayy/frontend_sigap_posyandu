@@ -92,19 +92,6 @@ void main() {
         expect(result, isFalse);
       });
 
-      test('clearFcmToken returns false when no JWT set', () async {
-        FCMService().setJwtToken(null);
-        final result = await FCMService().clearFcmToken();
-        expect(result, isFalse);
       });
-
-      test('clearFcmToken returns true on 204', () async {
-        FCMService().setJwtToken('test_jwt');
-        FCMService().setDioForTesting(_mockDio(204));
-
-        final result = await FCMService().clearFcmToken();
-        expect(result, isTrue);
-      });
-    });
   });
 }

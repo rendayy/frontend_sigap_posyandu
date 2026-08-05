@@ -201,23 +201,6 @@ class FCMService {
     return registerTokenToServer(token, _jwtToken!);
   }
 
-  Future<bool> clearFcmToken() async {
-    if (_jwtToken == null) return false;
-    try {
-      final response = await _dio.delete(
-        '/api/v1/alert/fcm-token',
-        options: Options(
-          headers: {'Authorization': 'Bearer $_jwtToken'},
-        ),
-      );
-      _jwtToken = null;
-      return response.statusCode == 200 || response.statusCode == 204;
-    } catch (e) {
-      log('Error clearing FCM token: $e', name: 'FCMService');
-      return false;
-    }
-  }
-
   void onTokenRefresh(void Function(String?) onChanged) {
     _firebaseMessaging.onTokenRefresh.listen(onChanged);
   }

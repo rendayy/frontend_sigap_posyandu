@@ -441,6 +441,8 @@ Gunakan `Duration(seconds: 30)` sebagai default. Nilai ini cukup untuk:
 - [ ] Gunakan `ModulePageMixin<T>` atau patuhi state convention manual
 - [ ] Stale-while-revalidate dengan `staleAfter: Duration(seconds: 30)`
 - [ ] `IndexedStack` untuk navigasi tab dalam satu halaman
+- [ ] Semua field model nullable jika ada kemungkinan `null` dari server (lihat §11)
+- [ ] Empty state widget untuk setiap list yang mungkin kosong (lihat §12)
 
 ---
 
@@ -470,3 +472,186 @@ Ukuran berikut BOLEH berbeda dan digunakan untuk hierarki visual:
 - `fontWeight` tidak dibatasi — boleh disesuaikan dengan kebutuhan hierarki visual (semakin tebal = semakin penting).
 - Semua teks WAJIB menggunakan `GoogleFonts.plusJakartaSans`.
 - Ukuran di luar tabel pengecualian hanya boleh digunakan jika ada persetujuan tim. Jika ragu, gunakan 14 untuk body, 12 untuk caption.
+
+---
+
+## 11. Null Safety & Model Contracts
+
+Setiap model yang menerima data dari API WAJIB mempertimbangkan kemungkinan field `null` dari server, terutama untuk data yang belum diisi pengguna.
+
+### 11.1. Aturan Nullable Field
+
+| Kondisi Field | Deklarasi Dart | Contoh |
+|--------------|----------------|--------|
+| Selalu ada dari server (PK, FK, status) | `String` / `int` (non-nullable) | `idRemaja`, `nik`, `statusAktif` |
+| Bisa null karena belum diisi user | `String?` / `int?` / `double?` | `sekolah`, `kelas`, `hobi`, `riwayatAnemia` |
+| Bisa null karena belum ada data terkait | `String?` / `int?` / `double?` | `latestStatus`, `latestGulaDarah`, `bmi` |
+
+### 11.2. Cara Penulisan `fromJson` yang Benar
+
+```dart
+// ✅ BENAR — null-safe dengan fallback
+factory ModelX.fromJson(Map<String, dynamic> json) {
+  return ModelX(
+    // Field yang PASTI ada (dari tabel utama, non-nullable di DB)
+    idItem: json['id_item'] as String,
+    nama: json['nama'] as String,
+
+    // Field nullable di DB atau mungkin null sebelum data diisi
+    sekolah: json['sekolah'] as String?,
+    kelas: json['kelas'] as String?,
+
+    // Field numerik yang bisa null (belum ada data pengukuran)
+    bmi: json['bmi'] != null ? (json['bmi'] as num).toDouble() : null,
+    gulaDarah: json['gula_darah'] as int?,
+
+    // Field agregat yang null jika sub-data masih kosong
+    latestStatus: json['latest_status'] as String?,
+  );
+}
+
+// ❌ SALAH — akan crash jika server kirim null
+factory ModelX.fromJson(Map<String, dynamic> json) {
+  return ModelX(
+    sekolah: json['sekolah'] as String,       // crash jika null!
+    bmi: (json['bmi'] as num).toDouble(),     // crash jika null!
+    latestStatus: json['latest_status'] as String, // crash jika null!
+  );
+}
+```
+
+### 11.3. Cara Penanganan di Widget/Page
+
+```dart
+// ✅ BENAR — gunakan ?? untuk fallback display
+Text(data.riwayatAnemia ?? 'tidak')          // default value
+Text(data.bmi?.toStringAsFixed(1) ?? '—')   // dash jika null
+Text(data.latestStatus ?? 'Belum ada data') // pesan informatif
+
+// ✅ BENAR — sembunyikan bagian jika null (untuk info opsional)
+if (data.prestasi != null)
+  Text(data.prestasi!)
+
+// ❌ SALAH — force unwrap tanpa guard
+Text(data.riwayatAnemia!)  // crash jika null!
+```
+
+### 11.4. Panduan Field Berdasarkan Tabel DB
+
+Sebagai referensi cepat saat membuat model, field yang **WAJIB nullable** adalah:
+
+| Tabel | Field Nullable |
+|-------|---------------|
+| `REMAJA` | `sekolah`, `kelas`, `prestasi`, `hobi`, `riwayat_anemia` |
+| `BALITA` | `status_gizi`, `nama_ayah`, `nama_ibu`, `no_hp_wa` |
+| `PEMANTAUAN_REMAJA` | `keluhan`, `saran`, semua field pengukuran jika dari endpoint agregat |
+| `PEMANTAUAN_BALITA` | `imunisasi`, `keluhan`, `saran`, `lingkar_kepala`, `lingkar_lengan` |
+| Endpoint chart/agregat | `latest_status`, `latest_gula_darah`, `bmi`, `color`, `label` (null jika belum ada data) |
+
+---
+
+## 12. Empty State
+
+Setiap list atau area yang menampilkan data dinamis WAJIB menangani kondisi data kosong dengan `EmptyStateWidget`, bukan membiarkan layar blank.
+
+### 12.1. Kapan Menggunakan Empty State
+
+| Kondisi | Tampilan |
+|---------|----------|
+| List API berhasil tapi `data: []` | `EmptyStateWidget` |
+| Chart/grafik tanpa data pengukuran | Banner "Belum ada pengukuran" di atas area chart |
+| Field nullable yang null di card | Tampilkan `"—"` |
+| Error parse / API gagal | Error screen dengan tombol "Coba Lagi" (bukan empty state) |
+
+**Penting:** Empty state ≠ error screen. Empty state tidak memiliki tombol "Coba Lagi".
+
+### 12.2. Cara Pakai
+
+```dart
+// Reusable widget
+import 'package:frontend_posyandu/widgets/common/empty_state_widget.dart';
+
+// Penggunaan minimal
+EmptyStateWidget(
+  icon: Icons.monitor_heart_outlined,
+  title: 'Belum ada data pemantauan',
+)
+
+// Dengan subtitle
+EmptyStateWidget(
+  icon: Icons.child_care_outlined,
+  title: 'Belum ada data pertumbuhan',
+  subtitle: 'Data akan muncul setelah pemantauan pertama dilakukan oleh kader.',
+)
+```
+
+### 12.3. Pola Implementasi di Page
+
+```dart
+Widget _buildListContent() {
+  // 1. Loading state → skeleton
+  if (_loading && _items.isEmpty) {
+    return _buildSkeleton();
+  }
+
+  // 2. Error state (tanpa cache) → error screen
+  if (_error != null && _items.isEmpty) {
+    return _buildError();
+  }
+
+  // 3. Empty state — data berhasil dimuat tapi kosong
+  if (_items.isEmpty) {
+    return EmptyStateWidget(
+      icon: Icons.list_alt_outlined,
+      title: 'Belum ada data',
+      subtitle: 'Data akan muncul setelah kader melakukan pencatatan.',
+    );
+  }
+
+  // 4. Data ada → tampilkan list
+  return ListView.builder(
+    itemCount: _items.length,
+    itemBuilder: (_, i) => ItemCard(item: _items[i]),
+  );
+}
+```
+
+### 12.4. Reusable Widget
+
+`widgets/common/empty_state_widget.dart`:
+
+```dart
+class EmptyStateWidget extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+
+  const EmptyStateWidget({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: const Color(0xFFCBD5E1)),
+            const SizedBox(height: 16),
+            Text(title, /* style: body 14 w600 textSecondary */),
+            if (subtitle != null) ...[
+              const SizedBox(height: 8),
+              Text(subtitle!, /* style: caption 12 w400 textSecondary */),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+```

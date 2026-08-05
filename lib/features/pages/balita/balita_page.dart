@@ -6,10 +6,12 @@ import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/core/utils/module_page_mixin.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
 import 'package:frontend_posyandu/features/pages/balita/riwayat_pemantauan_page.dart';
-import 'package:frontend_posyandu/widgets/balita/home_balita_header.dart';
-import 'package:frontend_posyandu/widgets/balita/home_balita_sections.dart';
+import 'package:frontend_posyandu/widgets/common/home_sections.dart';
 import 'package:frontend_posyandu/widgets/balita/home_bottom_nav.dart';
+import 'package:frontend_posyandu/widgets/balita/home_balita_sections.dart';
 import 'package:frontend_posyandu/widgets/common/offline_banner.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend_posyandu/core/utils/date_util.dart';
 
 import 'package:frontend_posyandu/features/pages/profil/profile_page.dart';
 
@@ -120,23 +122,15 @@ class _BalitaPageState extends State<BalitaPage> {
     return _buildContentWithSkeleton(d);
   }
 
-  String _formatDate(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      final months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    } catch (_) {
-      return isoDate;
-    }
-  }
-
   Widget _buildContentWithSkeleton(BalitaDetailResponse? d) {
     final showSkeleton = _helper.showSkeleton;
     final nama = d?.nama ?? '';
     final initials = nama.isNotEmpty ? nama[0].toUpperCase() : '?';
+
+    final isLengkap = d?.imunisasiDasar == 'lengkap';
+    final lastCheckupDate = d?.updatedAt != null
+        ? formatDate(d!.updatedAt!)
+        : d?.tanggalLahir ?? '-';
 
     return RefreshIndicator(
       onRefresh: () => _loadData(force: true),
@@ -150,16 +144,46 @@ class _BalitaPageState extends State<BalitaPage> {
                 onTap: () => _loadData(force: true),
               ),
             const SizedBox(height: 12),
-            GreetingSection(name: nama, initials: initials, isLoading: showSkeleton),
+            GreetingSection(
+              name: nama,
+              initials: initials,
+              isLoading: showSkeleton,
+              moduleBadge: 'Balita',
+              badgeColor: AppColors.pinkVivid,
+              badgeBgColor: AppColors.pinkLight,
+              avatarGradient: const [AppColors.orange, AppColors.beige],
+            ),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ProfileSummaryCard(
-                usia: d?.usia ?? 0,
-                imunisasiStatus: d?.imunisasiDasar == 'lengkap' ? 'Lengkap' : 'Tidak Lengkap',
-                lastCheckupDate: d?.updatedAt != null
-                    ? _formatDate(d!.updatedAt!)
-                    : d?.tanggalLahir ?? '-',
+                label: 'Usia Balita',
+                heroValue: d != null ? '${d.usia}' : '0',
+                heroUnit: 'Bulan',
+                icon: Icons.child_care,
+                gradient: const [AppColors.gold, AppColors.orange, AppColors.goldDark],
+                labelColor: AppColors.pinkLight,
+                statusRow: Row(
+                  children: [
+                    Text(
+                      'Imunisasi: ',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.pinkLight,
+                      ),
+                    ),
+                    Text(
+                      isLengkap ? 'Lengkap' : 'Tidak Lengkap',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                footerValue: lastCheckupDate,
                 isLoading: showSkeleton,
               ),
             ),
@@ -167,9 +191,29 @@ class _BalitaPageState extends State<BalitaPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: QuickStatsGrid(
-                tinggiBadan: d != null ? d.panjangLahir.toStringAsFixed(1) : '0',
-                beratBadan: d != null ? d.beratLahir.toStringAsFixed(1) : '0',
-                lingkarKepala: '-',
+                items: [
+                  QuickStatItem(
+                    label: 'Tinggi Badan',
+                    value: d != null ? d.panjangLahir.toStringAsFixed(1) : '0',
+                    unit: 'cm',
+                    icon: Icons.height,
+                    iconColor: const Color(0xFFAD46FF),
+                  ),
+                  QuickStatItem(
+                    label: 'Berat Badan',
+                    value: d != null ? d.beratLahir.toStringAsFixed(1) : '0',
+                    unit: 'kg',
+                    icon: Icons.monitor_weight_outlined,
+                    iconColor: const Color(0xFFFF2B4E),
+                  ),
+                  const QuickStatItem(
+                    label: 'Lingkar Kepala',
+                    value: '-',
+                    unit: 'cm',
+                    icon: Icons.adjust,
+                    iconColor: Color(0xFF00C950),
+                  ),
+                ],
                 isLoading: showSkeleton,
               ),
             ),

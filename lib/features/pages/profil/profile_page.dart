@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/core/models/citizen/citizen_model.dart';
 import 'package:frontend_posyandu/core/services/citizen/citizen_service.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
-import 'package:frontend_posyandu/core/services/fcm/fcm_service.dart';
 import 'package:frontend_posyandu/core/utils/cache_manager.dart';
 import 'package:frontend_posyandu/core/utils/module_page_mixin.dart';
 import 'package:frontend_posyandu/features/themes/app_colors.dart';
@@ -61,7 +60,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _loadData({bool force = false}) async {
     await loadModuleData(
       helper: _helper,
-      getModuleId: () => _authService.getModuleId(),
+      getModuleId: () async {
+        final id = await _authService.getModuleId();
+        if (id != null && id.isNotEmpty) return id;
+        final userInfo = await _authService.getUserInfo();
+        if (userInfo?.idAnggota != null && userInfo!.idAnggota.isNotEmpty) {
+          return userInfo.idAnggota;
+        }
+        return 'me';
+      },
       fetchFromApi: (_) => _citizenService.getMyProfile(),
       cacheManager: _cache,
       setState: () => setState(() {}),
@@ -90,7 +97,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
 
     if (confirm == true) {
-      await FCMService().clearFcmToken();
       await _authService.logout();
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
@@ -152,7 +158,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

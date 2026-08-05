@@ -95,29 +95,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(); // extra pump
 
-    // Debug: print what's in the helper
-    print('--- DEBUG: data is null? ${authService.getModuleId()}');
-    print('--- DEBUG: pumpAndSettle done');
-
-    // Find all Text widgets and print their data
-    final allTexts = find.byType(Text);
-    print('--- Total Text widgets: ${allTexts.evaluate().length}');
-    for (final element in allTexts.evaluate()) {
-      final text = element.widget as Text;
-      print('  Text: "${text.data}"');
-    }
-
-    // Debug helper state using pumpAndSettle callback
-    final profile = find.byType(ProfilePage);
-    print('--- ProfilePage found? ${profile.evaluate().isNotEmpty}');
-    await tester.pump(const Duration(milliseconds: 100));
-    final allTexts2 = find.byType(Text);
-    print('--- Total Text widgets after extra pump: ${allTexts2.evaluate().length}');
-    for (final element in allTexts2.evaluate()) {
-      final text = element.widget as Text;
-      print('  Text2: "${text.data}"');
-    }
-
     expect(find.text('Emma Elizabeth Myers'), findsOneWidget);
     expect(find.text('NIK: 0821433725931236'), findsOneWidget);
     expect(find.text('Sidoarjo'), findsOneWidget);

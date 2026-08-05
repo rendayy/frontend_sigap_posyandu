@@ -1,42 +1,35 @@
-class BalitaDetailResponse {
+import 'package:frontend_posyandu/core/models/warga_base_model.dart';
+
+class BalitaDetailResponse extends WargaBase {
   final String idBalita;
   final String idAnggota;
-  final String nik;
-  final String nama;
-  final String jenisKelamin;
-  final String tanggalLahir;
-  final int usia;
   final double beratLahir;
   final double panjangLahir;
   final String asiEksklusif;
   final String imunisasiDasar;
-  final String? statusGizi;
-  final String statusAktif;
   final String? namaAyah;
   final String? namaIbu;
   final String? noHpWa;
-  final String? createdAt;
-  final String? updatedAt;
 
   const BalitaDetailResponse({
     required this.idBalita,
     required this.idAnggota,
-    required this.nik,
-    required this.nama,
-    required this.jenisKelamin,
-    required this.tanggalLahir,
-    required this.usia,
+    required super.nik,
+    required super.nama,
+    required super.jenisKelamin,
+    required super.tanggalLahir,
+    required super.usia,
     required this.beratLahir,
     required this.panjangLahir,
     required this.asiEksklusif,
     required this.imunisasiDasar,
-    this.statusGizi,
-    required this.statusAktif,
+    super.statusGizi,
+    required super.statusAktif,
     this.namaAyah,
     this.namaIbu,
     this.noHpWa,
-    this.createdAt,
-    this.updatedAt,
+    super.createdAt,
+    super.updatedAt,
   });
 
   factory BalitaDetailResponse.fromJson(Map<String, dynamic> json) {
@@ -62,26 +55,19 @@ class BalitaDetailResponse {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
+      ...super.toJson(),
       'id_balita': idBalita,
       'id_anggota': idAnggota,
-      'nik': nik,
-      'nama': nama,
-      'jenis_kelamin': jenisKelamin,
-      'tanggal_lahir': tanggalLahir,
-      'usia': usia,
       'berat_lahir': beratLahir,
       'panjang_lahir': panjangLahir,
       'asi_eksklusif': asiEksklusif,
       'imunisasi_dasar': imunisasiDasar,
-      'status_gizi': statusGizi,
-      'status_aktif': statusAktif,
       'nama_ayah': namaAyah,
       'nama_ibu': namaIbu,
       'no_hp_wa': noHpWa,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
     };
   }
 }
