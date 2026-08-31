@@ -19,7 +19,8 @@ class _LoginPageState extends State<LoginPage> {
   final _nikController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final _authService = AuthService();
+  AuthService? _authServiceCache;
+  AuthService get _authService => _authServiceCache ??= AuthService();
 
   bool _loading = false;
   bool _passwordVisible = false;

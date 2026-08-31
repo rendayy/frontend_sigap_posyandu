@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend_posyandu/core/services/auth/auth_service.dart';
@@ -12,8 +15,13 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage>
     with SingleTickerProviderStateMixin {
+  static const _tag = 'SplashPage';
+
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
+  Timer? _timer;
+  Timer? _deadlineTimer;
+  bool _navigated = false;
 
   @override
   void initState() {
@@ -30,33 +38,92 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 2), _navigateNext);
+    _timer = Timer(const Duration(seconds: 2), _navigateNext);
+    _deadlineTimer = Timer(const Duration(seconds: 12), () {
+      if (!mounted || _navigated) return;
+      log('$_tag: hard-deadline tercapai -> paksa ke /login', name: _tag);
+      _navigateReplacement('/login');
+    });
   }
 
   Future<void> _navigateNext() async {
-    final authService = AuthService();
-    final isLoggedIn = await authService.isLoggedIn();
+    if (_navigated) return;
 
-    if (!mounted) return;
-
-    if (!isLoggedIn) {
-      Navigator.pushReplacementNamed(context, '/login');
+    late final AuthService authService;
+    try {
+      authService = AuthService();
+    } catch (e) {
+      log('$_tag: AuthService gagal dikonstruksi ($e) -> /login', name: _tag);
+      _navigateReplacement('/login');
       return;
     }
 
-    final category = await authService.getCategory();
+    final hasToken = await _safeRead(() => authService.isLoggedIn());
+    if (!mounted || _navigated) return;
+    log('$_tag: isLoggedIn=$hasToken', name: _tag);
 
-    if (!mounted) return;
+    if (hasToken != true) {
+      _navigateReplacement('/login');
+      return;
+    }
 
-    if (category != null) {
-      Navigator.pushReplacementNamed(context, category.route);
-    } else {
-      Navigator.pushReplacementNamed(context, '/home');
+    // Sesi hanya valid bila data lengkap & konsisten.
+    // Token parsial (sisa restore backup/crash) -> bersihkan & kembali ke login.
+    final userInfo = await _safeRead(() => authService.getUserInfo());
+    final category = await _safeRead(() => authService.getCategory());
+
+    if (!mounted || _navigated) return;
+    log(
+      '$_tag: userInfo=${userInfo != null}, category=${category?.name ?? 'null'}',
+      name: _tag,
+    );
+
+    if (userInfo == null || category == null) {
+      try {
+        await authService.logout().timeout(const Duration(seconds: 5));
+      } catch (e) {
+        log('$_tag: bersihkan sesi parsial gagal ($e)', name: _tag);
+      }
+      if (!mounted || _navigated) return;
+      _navigateReplacement('/login');
+      return;
+    }
+
+    _navigateReplacement(category.route);
+  }
+
+  Future<T?> _safeRead<T>(Future<T> Function() fn) async {
+    try {
+      return await fn().timeout(const Duration(seconds: 5));
+    } catch (e) {
+      log('$_tag: read gagal ($e)', name: _tag);
+      return null;
+    }
+  }
+
+  void _navigateReplacement(String route) {
+    if (!mounted || _navigated) return;
+    _navigated = true;
+    log('$_tag: navigate -> $route', name: _tag);
+
+    try {
+      Navigator.pushReplacementNamed(context, route);
+    } catch (e) {
+      log('$_tag: navigasi ke $route gagal ($e) -> fallback /login', name: _tag);
+      _navigated = false;
+      if (!mounted) return;
+      try {
+        Navigator.pushReplacementNamed(context, '/login');
+      } catch (e2) {
+        log('$_tag: fallback navigasi /login juga gagal: $e2', name: _tag);
+      }
     }
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
+    _deadlineTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

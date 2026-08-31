@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,9 +14,17 @@ void main() async {
 
   await AppConfig.initialize();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (e) {
+    log('Firebase init gagal: $e', name: 'Main');
+  }
 
-  await FCMService().initialize();
+  try {
+    await FCMService().initialize();
+  } catch (e) {
+    log('FCM init gagal: $e', name: 'Main');
+  }
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
