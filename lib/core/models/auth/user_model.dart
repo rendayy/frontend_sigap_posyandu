@@ -25,8 +25,9 @@ enum UserCategory {
 
   static UserCategory? fromString(String value) {
     if (value == 'umum') return UserCategory.posbindu;
+    final normalized = value.replaceAll('_', '').toLowerCase();
     for (final c in UserCategory.values) {
-      if (c.name == value || c.label == value) return c;
+      if (c.name == value || c.label == value || c.name.toLowerCase() == normalized) return c;
     }
     return null;
   }

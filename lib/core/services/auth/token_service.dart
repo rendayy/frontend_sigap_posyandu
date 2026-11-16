@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend_posyandu/core/models/auth/user_model.dart';
@@ -25,25 +26,32 @@ class TokenService {
       _storage.write(key: _accessTokenKey, value: accessToken),
       _storage.write(key: _refreshTokenKey, value: refreshToken),
       _storage.write(key: _rolesKey, value: roles.join(',')),
+      _writeToPrefs(_accessTokenKey, accessToken),
+      _writeToPrefs(_refreshTokenKey, refreshToken),
+      _writeToPrefs(_rolesKey, roles.join(',')),
     ]);
   }
 
   Future<String?> getAccessToken() async {
-    return await _storage.read(key: _accessTokenKey);
+    final secure = await _readFromStorage(_accessTokenKey);
+    if (secure != null) return secure;
+    return _readFromPrefs(_accessTokenKey);
   }
 
   Future<String?> getRefreshToken() async {
-    return await _storage.read(key: _refreshTokenKey);
+    final secure = await _readFromStorage(_refreshTokenKey);
+    if (secure != null) return secure;
+    return _readFromPrefs(_refreshTokenKey);
   }
 
   Future<List<String>> getRoles() async {
-    final roles = await _storage.read(key: _rolesKey);
-    if (roles == null || roles.isEmpty) return [];
-    return roles.split(',');
+    final raw = await _readFromStorage(_rolesKey);
+    if (raw == null || raw.isEmpty) return [];
+    return raw.split(',');
   }
 
   Future<bool> isLoggedIn() async {
-    final token = await _storage.read(key: _accessTokenKey);
+    final token = await getAccessToken();
     return token != null && token.isNotEmpty;
   }
 
@@ -52,7 +60,48 @@ class TokenService {
       _storage.delete(key: _accessTokenKey),
       _storage.delete(key: _refreshTokenKey),
       _storage.delete(key: _rolesKey),
+      _removeFromPrefs(_accessTokenKey),
+      _removeFromPrefs(_refreshTokenKey),
+      _removeFromPrefs(_rolesKey),
     ]);
+  }
+
+  Future<String?> _readFromStorage(String key) async {
+    try {
+      final value = await _storage.read(key: key);
+      if (value != null && value.isNotEmpty) return value;
+    } catch (e) {
+      debugPrint('TokenService: secure storage read gagal ($key): $e');
+    }
+    return null;
+  }
+
+  Future<String?> _readFromPrefs(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(key);
+    } catch (e) {
+      debugPrint('TokenService: prefs read gagal ($key): $e');
+      return null;
+    }
+  }
+
+  Future<void> _writeToPrefs(String key, String value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, value);
+    } catch (e) {
+      debugPrint('TokenService: prefs write gagal ($key): $e');
+    }
+  }
+
+  Future<void> _removeFromPrefs(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(key);
+    } catch (e) {
+      debugPrint('TokenService: prefs remove gagal ($key): $e');
+    }
   }
 
   Future<void> saveCategory(UserCategory category) async {
